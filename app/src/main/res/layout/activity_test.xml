@@ -22,4 +22,23 @@
         android:layout_below="@+id/button"
         />
 
+    <ImageView
+        android:layout_below="@+id/button2"
+        android:id="@+id/imageView"
+        android:layout_width="@dimen/dp_100"
+        android:layout_height="@dimen/dp_100"
+        android:layout_centerHorizontal="true"
+        android:src="@mipmap/ic_launcher"
+        android:scaleType="centerInside"
+        />
+
+    <Button
+        android:id="@+id/button5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="扫描二维码"
+        android:layout_below="@+id/imageView"
+        android:layout_centerHorizontal="true"
+        />
+
 </RelativeLayout>

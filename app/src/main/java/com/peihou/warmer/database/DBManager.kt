@@ -9,7 +9,7 @@ class DBManager private constructor(){
     private val dbName:String="warmer"
     private var openHelper: DaoMaster.DevOpenHelper?=null
     private var daoMaster:DaoMaster?=null
-    private get() {
+    get() {
         if (field==null){
             synchronized(DBManager::class.java){
                 if (field==null){
