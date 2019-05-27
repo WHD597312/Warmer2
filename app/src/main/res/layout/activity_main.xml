@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+   <!--<TextView-->
+       <!--android:layout_width="match_parent"-->
+       <!--android:layout_height="match_parent"-->
+       <!--android:text="ssssssss"-->
+       <!--android:textSize="16dp"-->
+       <!--android:layout_centerInParent="true"-->
+       <!--android:gravity="center"-->
+       <!--/>-->
+   <com.peihou.warmer.CustomCircleProgressBar
+       android:id="@+id/circleProgressBar"
+       android:layout_width="@dimen/dp_300"
+       android:layout_height="@dimen/dp_300"
+       app:ring_width="@dimen/dp_10"
+       app:ring_color="@color/gray"
+       android:layout_centerInParent="true"
+       />
+</RelativeLayout>
