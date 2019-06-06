@@ -10,7 +10,7 @@ class DeviceDaoImpl{
     var deviceDao:DeviceDao?=null
     constructor(context:Context){
         var dbManager:DBManager?= DBManager.getInstance(context)
-        var session:DaoSession?=dbManager?.daoSesson
+        var session:DaoSession?=dbManager?.daoSession
         deviceDao=session?.deviceDao
     }
     fun insert(device:Device){

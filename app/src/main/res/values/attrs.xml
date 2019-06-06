@@ -3,6 +3,7 @@
     <declare-styleable name="CustomCircleProgressBar">
         <attr name="ring_width" format="dimension"/>
         <attr name="ring_color" format="color"/>
+        <attr name="ring_dot" format="dimension"/>
         <attr name="touch_enable" format="boolean"/>
         <attr name="current_angle" format="float"/>
     </declare-styleable>

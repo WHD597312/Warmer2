@@ -9,10 +9,28 @@ import butterknife.OnClick
 import com.peihou.warmer.R
 import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
+import com.peihou.warmer.base.BaseActivity
 import kotlinx.android.synthetic.main.activity_scan.*
 
 
-class ScanActivity : AppCompatActivity(),DecoratedBarcodeView.TorchListener {
+class ScanActivity : BaseActivity(),DecoratedBarcodeView.TorchListener {
+    var savedInstanceState:Bundle?=null
+    override fun initParms(parms: Bundle?) {
+        savedInstanceState=parms
+    }
+
+    override fun bindLayout(): Int {
+        return R.layout.activity_scan
+    }
+
+    override fun initView() {
+        dbv.setStatusText("ssssss")
+        dbv.setTorchListener(this)
+        captureManager = CaptureManager(this, dbv)
+        captureManager?.initializeFromIntent(intent, savedInstanceState)
+        captureManager?.decode()
+    }
+
     private var isLightOn:Boolean=false
     override fun onTorchOn() {
         isLightOn=true
@@ -27,16 +45,7 @@ class ScanActivity : AppCompatActivity(),DecoratedBarcodeView.TorchListener {
                 .hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)
     }
     private var captureManager:CaptureManager?=null
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_scan)
-        ButterKnife.bind(this)
-        dbv.setStatusText("ssssss")
-        dbv.setTorchListener(this)
-        captureManager = CaptureManager(this, dbv)
-        captureManager?.initializeFromIntent(intent, savedInstanceState)
-        captureManager?.decode()
-    }
+
 
 //    override fun onSaveInstanceState(outState: Bundle?) {
 //        super.onSaveInstanceState(outState)

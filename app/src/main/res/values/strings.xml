@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Warmer</string>
+    <string name="location">定位</string>
 </resources>

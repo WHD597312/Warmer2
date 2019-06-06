@@ -20,13 +20,10 @@ class DBManager private constructor(){
         return field
     }
 
-    var daoSesson: DaoSession?=null
+    var daoSession: DaoSession?=null
     get() {
         if (field==null){
             synchronized(DBManager::class.java){
-                if (daoMaster==null){
-                    daoMaster=daoMaster
-                }
                 if (field==null){
                     field=daoMaster?.newSession(IdentityScopeType.Session)
                 }

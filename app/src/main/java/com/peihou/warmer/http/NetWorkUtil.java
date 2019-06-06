@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import com.peihou.warmer.MyApplication;
+import com.peihou.warmer.base.MyApplication;
 
 
 
@@ -50,7 +50,7 @@ public class NetWorkUtil {
     public static boolean isWifiConnected() {
         boolean isConnected = false;
         try {
-            ConnectivityManager cm = (ConnectivityManager) MyApplication.Companion.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+            ConnectivityManager cm = (ConnectivityManager) MyApplication.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo info = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
             isConnected = info.isConnected();
         } catch (Exception e) {
@@ -62,7 +62,7 @@ public class NetWorkUtil {
     public static boolean isMobileConnected() {
         boolean isConnected = false;
         try {
-            ConnectivityManager cm = (ConnectivityManager) MyApplication.Companion.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+            ConnectivityManager cm = (ConnectivityManager) MyApplication.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo info = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
             isConnected = info.isConnected();
         } catch (Exception e) {

@@ -10,8 +10,8 @@ import com.peihou.warmer.R
 import retrofit2.http.Url
 import java.io.File
 
-class GlideUtils {
-    companion object {
+object GlideUtils {
+
         /**
          * 加载本地资源圆形图片
          */
@@ -80,5 +80,5 @@ class GlideUtils {
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
             Glide.with(context).load(url).apply(options).into(img)
         }
-    }
+
 }

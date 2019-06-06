@@ -2,7 +2,7 @@ package com.peihou.warmer.http;
 
 
 import com.google.gson.Gson;
-import com.peihou.warmer.MyApplication;
+import com.peihou.warmer.base.MyApplication;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +46,7 @@ public class HttpUtils {
 //            }
             Response response = chain.proceed(request);
 
-            if (NetWorkUtil.isConn(MyApplication.Companion.getContext())) {
+            if (NetWorkUtil.isConn(MyApplication.getContext())) {
                 int maxAge = 0;//缓存失效时间，单位为秒
                 return response.newBuilder()
                         .removeHeader("Pragma")//清除头信息，因为服务器如果不支持，会返回一些干扰信息，不清除下面无法生效
@@ -101,7 +101,7 @@ public class HttpUtils {
     public static String requestGet(String url) {
         String result = null;
         try {
-            File httpCacheDirectory = new File(MyApplication.Companion.getContext().getCacheDir(), "HttpCache");//这里为了方便直接把文件放在了SD卡根目录的HttpCache中，一般放在context.getCacheDir()中
+            File httpCacheDirectory = new File(MyApplication.getContext().getCacheDir(), "HttpCache");//这里为了方便直接把文件放在了SD卡根目录的HttpCache中，一般放在context.getCacheDir()中
             int cacheSize = 10 * 1024 * 1024;//设置缓存文件大小为10M
             Cache cache = new Cache(httpCacheDirectory, cacheSize);
             Retrofit retrofit = new Retrofit.Builder()
