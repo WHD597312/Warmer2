@@ -13,6 +13,11 @@ import android.util.Log;
 
 
 import com.bumptech.glide.Glide;
+import com.mob.MobSDK;
+import com.peihou.warmer.database.dao.impl.DeviceDaoImpl;
+import com.peihou.warmer.lib.DaemonHolder;
+import com.peihou.warmer.pojo.Device;
+import com.peihou.warmer.service.MQService;
 
 
 import java.lang.reflect.Field;
@@ -34,6 +39,7 @@ public class MyApplication extends Application {
     private static Context mContext;
     public static int floating=0;
 
+    private DeviceDaoImpl deviceDao;
 
     public static Context getContext(){
         return mContext;
@@ -42,6 +48,7 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
+        DaemonHolder.init(this, MQService.class);
         mContext = getApplicationContext();
         new LoadAsync().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
@@ -85,7 +92,9 @@ public class MyApplication extends Application {
 
         @Override
         protected Void doInBackground(Void... voids) {
+            MobSDK.init(mContext);
             Glide.get(mContext);
+            deviceDao=new DeviceDaoImpl(mContext);
             return null;
         }
 
@@ -94,7 +103,12 @@ public class MyApplication extends Application {
             super.onPostExecute(aVoid);
         }
     }
-//    private static final String PUSH_CHANNEL_ID = "PUSH_NOTIFY_ID";
+
+    public DeviceDaoImpl getDeviceDao() {
+        return deviceDao;
+    }
+
+    //    private static final String PUSH_CHANNEL_ID = "PUSH_NOTIFY_ID";
 //    private static final String PUSH_CHANNEL_NAME = "PUSH_NOTIFY_NAME";
 //    //需要创建 NotificationChannel
 //    private void createNotificationChannel(){
@@ -136,6 +150,11 @@ public class MyApplication extends Application {
     public void removeAllActivity(){
         for (Activity activity:activities){
             activity.finish();
+        }
+        List<Device> devices=deviceDao.findAllDevice();
+        for (Device device:devices){
+            device.setOnline(false);
+            deviceDao.update(device);
         }
     }
     /**

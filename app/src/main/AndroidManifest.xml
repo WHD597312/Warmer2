@@ -19,7 +19,6 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- 用于提高GPS定位速度 -->
     <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
@@ -41,6 +40,8 @@
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:name=".base.MyApplication"
@@ -51,7 +52,33 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.peihou.warmer.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
 
+
+        <meta-data
+            android:name="com.amap.api.v2.apikey"
+            android:value="60cfd9a65b0dcb4bc82bc7e1837e3573" />
+        <receiver
+            android:name=".receiver.MQTTMessageReveiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+                <!--<action android:name="android.intent.action.TIME_TICK"></action>-->
+                <action android:name="mqttmessage2" />
+                <!--<action android:name="android.intent.action.BOOT_COMPLETED"/>-->
+            </intent-filter>
+        </receiver>
+
+        <service android:name="com.amap.api.location.APSService" />
         <service
             android:name=".service.MQService"
             android:enabled="true"
@@ -62,7 +89,8 @@
         <meta-data
             android:name="design_height_in_dp"
             android:value="640" />
-        <activity android:name=".activity.DeviceStateActivity"/>
+
+        <activity android:name=".activity.DeviceStateActivity" />
         <activity android:name=".activity.PersonSetActivity" />
         <activity android:name=".activity.MainActivity" />
         <activity android:name=".activity.ShareDeviceActivity" />
@@ -75,14 +103,18 @@
         <activity android:name=".activity.Set02Activity" />
         <activity android:name=".activity.Set03Activity" />
         <activity android:name=".activity.Set04Activity" />
-        <activity android:name=".activity.LoginActivity">
+        //图片选择Activity
+        <activity android:name="com.donkingliang.imageselector.ImageSelectorActivity"
+
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
+        <activity android:name=".activity.TestActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activity.TestActivity" />
+        <!--<activity android:name=".activity.TestActivity" />-->
         <activity android:name=".activity.ScanActivity" />
     </application>
 

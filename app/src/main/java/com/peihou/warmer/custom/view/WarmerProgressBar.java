@@ -8,11 +8,14 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.support.annotation.Nullable;
+import android.widget.Toast;
 
 import com.peihou.warmer.R;
+import com.peihou.warmer.utils.ToastUtils;
 
 public class WarmerProgressBar extends View {
     private Paint paint;//定义一个画笔
@@ -23,8 +26,10 @@ public class WarmerProgressBar extends View {
     float centerX;
     float centerY;
     private int rangRadus=0;
+    private Context context;
     public WarmerProgressBar(Context context) {
         this(context, null);
+        this.context=context;
     }
 
     public WarmerProgressBar(Context context, @Nullable AttributeSet attrs) {
@@ -86,15 +91,15 @@ public class WarmerProgressBar extends View {
         centerX = (left + right) / 2;
         centerY = (top + bottom) / 2;
 //        float radius = canvas.getWidth() / 2 - ring_width;
-        canvas.rotate(225,centerX,centerY);
+        canvas.rotate(217.5F,centerX,centerY);
         paint.setColor(getResources().getColor(R.color.white));
-        for (int i = 0; i < 45; i++) {//总共45个点  所以绘制45次  //绘制一圈的小黑点
+        for (int i = 0; i < 48; i++) {//总共45个点  所以绘制48次  //绘制一圈的小黑点
 
             if (i==0){
                 paint.setColor(getResources().getColor(R.color.color_orange));
-            }else if (i>0 && i<=34){
+            }else if (i>0 && i<=38){
                 paint.setColor(getResources().getColor(R.color.white));
-            }else if (i>34){
+            }else if (i>38){
                 paint.setColor(getResources().getColor(R.color.color_blank2));
 
             }
@@ -102,25 +107,26 @@ public class WarmerProgressBar extends View {
                     getPaddingTop() + ring_width + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()),
                     centerX + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()),
                     getPaddingTop() + ring_width + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 15, getResources().getDisplayMetrics()), paint);
-            canvas.rotate(8, centerX, centerY);
+            canvas.rotate(7.5f, centerX, centerY);
         }
 
         Log.i("current_angle","-->"+current_angle);
         if (current_angle>=0){
             paint.setColor(getResources().getColor(R.color.color_orange));
-            for (int i = 0; i <current_angle/8 ; i++) {
+            for (int i = 0; i <current_angle/7.5 ; i++) {
 
                 canvas.drawRect(centerX - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()),
                         getPaddingTop() + ring_width + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()),
                         centerX + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()),
                         getPaddingTop() + ring_width + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 15, getResources().getDisplayMetrics()), paint);
-                canvas.rotate(8, centerX, centerY);
+                canvas.rotate(7.5f, centerX, centerY);
             }
             canvas.save();
         }
 
     }
 
+    private int value=5;
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         float Action_x = event.getX();
@@ -133,16 +139,34 @@ public class WarmerProgressBar extends View {
         Log.i("get_x0", "(" + get_x0 + "," + get_y0 + ")");
 
         switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                if (mode==1){
+                    Toast toast=Toast.makeText(getContext(),"设备已关机",Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER,0,0);
+                    toast.show();
+                    break;
+                } else if (mode==2) {
+                    Toast toast=Toast.makeText(getContext(),"定时模式下不能滑动",Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER,0,0);
+                    toast.show();
+                    break;
+                }else if (mode==3){
+                    Toast toast=Toast.makeText(getContext(),"设备已离线",Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER,0,0);
+                    toast.show();
+                }
+                if (!isInCiecle(Action_x,Action_y) && isCanTouch){
+                    break;
+                }
+               break;
             case MotionEvent.ACTION_MOVE:
                 //左下角
-                if (isInCiecle(Action_x,Action_y)){
+                if (isInCiecle(Action_x,Action_y) && mode==0){
                     if (get_x0 <= 0 & get_y0 >= 0) {
-                        Log.i("current_angle", "左下角-->" + current_angle);
                         float tan_x = get_x0 * (-1);
                         float tan_y = get_y0;
                         double atan = Math.atan(tan_x / tan_y);
-
-                        current_angle = (int) Math.toDegrees(atan) - 45;
+                        current_angle = (int) Math.toDegrees(atan) -37.5F ;
                         Log.i("current_angle", "左下角-->" + current_angle);
                         if (current_angle < 0) {
                             break;
@@ -155,7 +179,7 @@ public class WarmerProgressBar extends View {
                         float tan_x = get_x0 * (-1);
                         float tan_y = get_y0 * (-1);
                         double atan = Math.atan(tan_y / tan_x);
-                        current_angle = (int) Math.toDegrees(atan) + 45;
+                        current_angle = (int) Math.toDegrees(atan) + 52.5F;
                         Log.i("current_angle", "左上角-->" + current_angle);
                     }
 
@@ -165,31 +189,47 @@ public class WarmerProgressBar extends View {
                         float tan_x = get_x0;
                         float tan_y = get_y0 * (-1);
                         double atan = Math.atan(tan_x / tan_y);
-                        current_angle = (int) Math.toDegrees(atan) + 135;
+                        current_angle = (int) Math.toDegrees(atan) + 142.5F;
                         Log.i("current_angle", "右上角-->" + current_angle);
                     }
 
                     //右下角
 
                     if (get_x0 >= 0 & get_y0 >= 0) {
-
                         float tan_x = get_x0;
                         float tan_y = get_y0;
                         double atan = Math.atan(tan_y / tan_x);
                         current_angle = (int) Math.toDegrees(atan);
                         Log.i("current_angle", "右下角-->" + current_angle);
-
-                        if (current_angle >= 0 && current_angle <= 50) {
-                            current_angle = current_angle + 225;
-                        } else if (current_angle > 50) {
+                        if (current_angle >= 0 && current_angle <= 55) {
+                            current_angle = current_angle + 232.5F;
+                        } else if (current_angle > 55) {
                             break;
                         }
-                        Log.i("current_angle", "右下角-->" + current_angle);
                     }
+                    Log.i("current_angle", "右下角-->" + current_angle);
+                    float temp = current_angle / 7.5F +5;
+                    value= (int) temp;
+
+                    Log.i("cur", "-->" + temp);
+                    value = (int) temp;
+                    if (value >= 42) {
+                        value = 42;
+                    }
+                    if (value<=5){
+                        value=5;
+                    }
+                    Log.i("AngleEEEEEE","-->"+value);
                     invalidate();
                 }
 
+
 //                invalidate();
+                break;
+            case MotionEvent.ACTION_UP:
+                if (onMoveListener!=null && mode==0){
+                    onMoveListener.setOnMoveListener(value);
+                }
                 break;
         }
         return true;
@@ -212,11 +252,43 @@ public class WarmerProgressBar extends View {
         return isCanTouch;
     }
 
+    public float getCurrent_angle() {
+        return current_angle;
+    }
+
+    public void setCurrentAngle(int setTemp) {
+        current_angle=(setTemp-5)*7.5f;
+        invalidate();
+    }
+
     /**
      * 能够触摸滑动盘
      * @param canTouch
      */
     public void setCanTouch(boolean canTouch) {
         isCanTouch = canTouch;
+    }
+    public OnMoveListener onMoveListener;
+
+    public OnMoveListener getOnMoveListener() {
+        return onMoveListener;
+    }
+
+    public void setOnMoveListener(OnMoveListener onMoveListener) {
+        this.onMoveListener = onMoveListener;
+    }
+
+    private int mode;
+
+    public void setMode(int mode) {
+        this.mode = mode;
+    }
+
+    public int getMode() {
+        return mode;
+    }
+
+    public interface OnMoveListener{
+        void setOnMoveListener(int value);
     }
 }

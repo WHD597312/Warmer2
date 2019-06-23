@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <!-- 这块的 corner重要作用是 控制：那个圆角的半径，值越大，半径越大！圆角的弧度就越大 -->
+    <corners  android:radius="@dimen/dp_15"/>
+
+    <solid  android:color="#ffffff"/>
+    <gradient
+
+        android:centerColor="@color/white"
+        android:endColor="@color/white"
+        android:startColor="@color/white"
+        android:angle="90"
+
+        />
+
+</shape>

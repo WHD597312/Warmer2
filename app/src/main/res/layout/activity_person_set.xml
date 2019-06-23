@@ -43,7 +43,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/img_touxiang"
-            android:text="1234567890"
+            android:text="admin"
             android:textColor="@color/color_blank4"
             android:gravity="center"
             android:textSize="@dimen/sp_18"

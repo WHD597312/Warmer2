@@ -5,6 +5,7 @@
     <color name="colorAccent">#D81B60</color>
     <color name="blue">#ff0099cc</color>
     <color name="gray">#d8dbd5</color>
+    <color name="gray2">#E0E0E0</color>
     <color name="color_orange">#FF860E</color>
     <color name="white">#ffffff</color>
     <color name="color_blank3">#3c3731</color>
@@ -13,4 +14,7 @@
     <color name="color_refersh">#696969</color>
     <color name="holo_red_light">#ffff4444</color>
     <color name="color_blank5">#999999</color>
+    <color name="red_pressed">#FF6666</color>
+    <color name="green2">#57Cf76</color>
+
 </resources>

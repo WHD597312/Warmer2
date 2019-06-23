@@ -181,7 +181,7 @@ public class ZXingUtils {
      * @param bitmap
      * @return
      */
-    public static String recogQRcode(Bitmap bitmap){
+    public static String parseQRcode(Bitmap bitmap){
         String result=null;
 //        Bitmap image = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
         int width = bitmap.getWidth();

@@ -61,8 +61,8 @@
                     />
                 <ImageView
                     android:id="@+id/img_state"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="@dimen/dp_60"
+                    android:layout_height="@dimen/dp_40"
                     android:src="@mipmap/img_close"
                     android:layout_alignParentRight="true"
                     android:scaleType="centerInside"
@@ -95,7 +95,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerInParent="true"
-                    android:text="0"
+                    android:text="5"
                     android:textColor="@color/color_orange"
                     android:textSize="@dimen/sp_18"
                     android:gravity="center_vertical"
@@ -124,7 +124,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_toLeftOf="@+id/tv_close"
-                    android:text="0"
+                    android:text="10"
                     android:textColor="@color/color_orange"
                     android:textSize="@dimen/sp_18"
                     android:layout_centerVertical="true"
@@ -138,8 +138,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                app:rsb_max="100"
-                app:rsb_min="1"
+                app:rsb_max="10"
+                app:rsb_min="5"
                 app:rsb_mode="range"
                 app:rsb_progress_color="@color/color_orange"
                 app:rsb_progress_default_color="@color/gray"
@@ -155,6 +155,7 @@
 
         </LinearLayout>
         <Button
+            android:id="@+id/btn_submit"
             android:layout_marginTop="@dimen/dp_50"
             android:layout_below="@+id/rl_layout"
             android:layout_width="match_parent"

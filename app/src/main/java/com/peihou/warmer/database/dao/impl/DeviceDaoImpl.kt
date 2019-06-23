@@ -16,22 +16,22 @@ class DeviceDaoImpl{
     fun insert(device:Device){
        deviceDao?.insert(device)
     }
-    fun update(device: Device){
+    fun update(device: Device?){
         deviceDao?.update(device)
     }
-    fun delete(device: Device){
+    fun delete(device: Device?){
         deviceDao?.delete(device)
     }
     fun deleteAll(){
         deviceDao?.deleteAll()
     }
-    fun findDeivce(deviceMac: String):Device?{
+    fun findDevice(deviceMac: String?):Device?{
         return deviceDao?.queryBuilder()?.where(DeviceDao.Properties.DeviceMac.eq(deviceMac))?.unique()
     }
-    fun findDeice(deviceId: Int):Device?{
+    fun findDevice(deviceId: Int):Device?{
         return deviceDao?.queryBuilder()?.where(DeviceDao.Properties.DeviceId.eq(deviceId))?.unique()
     }
-    fun findAllDevice():List<Device>?{
+    fun findAllDevice():MutableList<Device>?{
         return deviceDao?.loadAll()
     }
 }

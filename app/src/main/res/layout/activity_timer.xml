@@ -56,6 +56,7 @@
             android:layout_marginRight="@dimen/dp_25"
             >
             <TextView
+                android:id="@+id/tv_week1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -66,6 +67,7 @@
                 android:background="@drawable/shape_week"
                 />
             <TextView
+                android:id="@+id/tv_week2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -74,9 +76,11 @@
                 android:textColor="@color/white"
                 android:gravity="center"
                 android:layout_marginLeft="@dimen/dp_10"
+                android:background="@drawable/shape_week2"
                 />
 
             <TextView
+                android:id="@+id/tv_week3"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -88,6 +92,7 @@
                 />
 
             <TextView
+                android:id="@+id/tv_week4"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -99,6 +104,7 @@
                 />
 
             <TextView
+                android:id="@+id/tv_week5"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -110,6 +116,7 @@
                 />
 
             <TextView
+                android:id="@+id/tv_week6"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -120,6 +127,7 @@
                 android:layout_marginLeft="@dimen/dp_10"
                 />
             <TextView
+                android:id="@+id/tv_week7"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"

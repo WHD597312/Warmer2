@@ -19,18 +19,23 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="开/关"
-        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="@dimen/dp_10"
         android:layout_marginBottom="@dimen/dp_5"
         />
-
+    <Button
+        android:id="@+id/btn_gallery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="相冊"
+        android:layout_alignTop="@+id/btn_light"
+        android:layout_toRightOf="@+id/btn_light"
+        android:layout_marginLeft="@dimen/dp_10"
+        />
     <com.journeyapps.barcodescanner.DecoratedBarcodeView
         android:layout_above="@+id/btn_light"
         android:id="@+id/dbv"
         android:layout_below="@+id/tv_back"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:zxing_framing_rect_height="200dp"
-        app:zxing_framing_rect_width="200dp"
-        app:zxing_preview_scaling_strategy="fitXY"
-        app:zxing_use_texture_view="true"/>
+        app:zxing_scanner_layout="@layout/custom_barcode_scanner"/>
 </RelativeLayout>

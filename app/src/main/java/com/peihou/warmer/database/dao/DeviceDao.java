@@ -25,9 +25,18 @@ public class DeviceDao extends AbstractDao<Device, Long> {
      */
     public static class Properties {
         public final static Property Id = new Property(0, Long.class, "id", true, "_id");
-        public final static Property DeviceName = new Property(1, String.class, "deviceName", false, "DEVICE_NAME");
+        public final static Property Online = new Property(1, boolean.class, "online", false, "ONLINE");
         public final static Property DeviceMac = new Property(2, String.class, "deviceMac", false, "DEVICE_MAC");
         public final static Property DeviceId = new Property(3, int.class, "deviceId", false, "DEVICE_ID");
+        public final static Property DeviceName = new Property(4, String.class, "deviceName", false, "DEVICE_NAME");
+        public final static Property UserId = new Property(5, int.class, "userId", false, "USER_ID");
+        public final static Property Mode = new Property(6, int.class, "mode", false, "MODE");
+        public final static Property Open = new Property(7, int.class, "open", false, "OPEN");
+        public final static Property Lock = new Property(8, int.class, "lock", false, "LOCK");
+        public final static Property SetTemp = new Property(9, int.class, "setTemp", false, "SET_TEMP");
+        public final static Property CurrentTemp = new Property(10, int.class, "currentTemp", false, "CURRENT_TEMP");
+        public final static Property Error = new Property(11, int.class, "error", false, "ERROR");
+        public final static Property State = new Property(12, int.class, "state", false, "STATE");
     }
 
 
@@ -44,9 +53,18 @@ public class DeviceDao extends AbstractDao<Device, Long> {
         String constraint = ifNotExists? "IF NOT EXISTS ": "";
         db.execSQL("CREATE TABLE " + constraint + "\"DEVICE\" (" + //
                 "\"_id\" INTEGER PRIMARY KEY AUTOINCREMENT ," + // 0: id
-                "\"DEVICE_NAME\" TEXT," + // 1: deviceName
+                "\"ONLINE\" INTEGER NOT NULL ," + // 1: online
                 "\"DEVICE_MAC\" TEXT," + // 2: deviceMac
-                "\"DEVICE_ID\" INTEGER NOT NULL );"); // 3: deviceId
+                "\"DEVICE_ID\" INTEGER NOT NULL ," + // 3: deviceId
+                "\"DEVICE_NAME\" TEXT," + // 4: deviceName
+                "\"USER_ID\" INTEGER NOT NULL ," + // 5: userId
+                "\"MODE\" INTEGER NOT NULL ," + // 6: mode
+                "\"OPEN\" INTEGER NOT NULL ," + // 7: open
+                "\"LOCK\" INTEGER NOT NULL ," + // 8: lock
+                "\"SET_TEMP\" INTEGER NOT NULL ," + // 9: setTemp
+                "\"CURRENT_TEMP\" INTEGER NOT NULL ," + // 10: currentTemp
+                "\"ERROR\" INTEGER NOT NULL ," + // 11: error
+                "\"STATE\" INTEGER NOT NULL );"); // 12: state
     }
 
     /** Drops the underlying database table. */
@@ -63,17 +81,26 @@ public class DeviceDao extends AbstractDao<Device, Long> {
         if (id != null) {
             stmt.bindLong(1, id);
         }
- 
-        String deviceName = entity.getDeviceName();
-        if (deviceName != null) {
-            stmt.bindString(2, deviceName);
-        }
+        stmt.bindLong(2, entity.getOnline() ? 1L: 0L);
  
         String deviceMac = entity.getDeviceMac();
         if (deviceMac != null) {
             stmt.bindString(3, deviceMac);
         }
         stmt.bindLong(4, entity.getDeviceId());
+ 
+        String deviceName = entity.getDeviceName();
+        if (deviceName != null) {
+            stmt.bindString(5, deviceName);
+        }
+        stmt.bindLong(6, entity.getUserId());
+        stmt.bindLong(7, entity.getMode());
+        stmt.bindLong(8, entity.getOpen());
+        stmt.bindLong(9, entity.getLock());
+        stmt.bindLong(10, entity.getSetTemp());
+        stmt.bindLong(11, entity.getCurrentTemp());
+        stmt.bindLong(12, entity.getError());
+        stmt.bindLong(13, entity.getState());
     }
 
     @Override
@@ -84,17 +111,26 @@ public class DeviceDao extends AbstractDao<Device, Long> {
         if (id != null) {
             stmt.bindLong(1, id);
         }
- 
-        String deviceName = entity.getDeviceName();
-        if (deviceName != null) {
-            stmt.bindString(2, deviceName);
-        }
+        stmt.bindLong(2, entity.getOnline() ? 1L: 0L);
  
         String deviceMac = entity.getDeviceMac();
         if (deviceMac != null) {
             stmt.bindString(3, deviceMac);
         }
         stmt.bindLong(4, entity.getDeviceId());
+ 
+        String deviceName = entity.getDeviceName();
+        if (deviceName != null) {
+            stmt.bindString(5, deviceName);
+        }
+        stmt.bindLong(6, entity.getUserId());
+        stmt.bindLong(7, entity.getMode());
+        stmt.bindLong(8, entity.getOpen());
+        stmt.bindLong(9, entity.getLock());
+        stmt.bindLong(10, entity.getSetTemp());
+        stmt.bindLong(11, entity.getCurrentTemp());
+        stmt.bindLong(12, entity.getError());
+        stmt.bindLong(13, entity.getState());
     }
 
     @Override
@@ -106,9 +142,18 @@ public class DeviceDao extends AbstractDao<Device, Long> {
     public Device readEntity(Cursor cursor, int offset) {
         Device entity = new Device( //
             cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // id
-            cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // deviceName
+            cursor.getShort(offset + 1) != 0, // online
             cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // deviceMac
-            cursor.getInt(offset + 3) // deviceId
+            cursor.getInt(offset + 3), // deviceId
+            cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // deviceName
+            cursor.getInt(offset + 5), // userId
+            cursor.getInt(offset + 6), // mode
+            cursor.getInt(offset + 7), // open
+            cursor.getInt(offset + 8), // lock
+            cursor.getInt(offset + 9), // setTemp
+            cursor.getInt(offset + 10), // currentTemp
+            cursor.getInt(offset + 11), // error
+            cursor.getInt(offset + 12) // state
         );
         return entity;
     }
@@ -116,9 +161,18 @@ public class DeviceDao extends AbstractDao<Device, Long> {
     @Override
     public void readEntity(Cursor cursor, Device entity, int offset) {
         entity.setId(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
-        entity.setDeviceName(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
+        entity.setOnline(cursor.getShort(offset + 1) != 0);
         entity.setDeviceMac(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
         entity.setDeviceId(cursor.getInt(offset + 3));
+        entity.setDeviceName(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
+        entity.setUserId(cursor.getInt(offset + 5));
+        entity.setMode(cursor.getInt(offset + 6));
+        entity.setOpen(cursor.getInt(offset + 7));
+        entity.setLock(cursor.getInt(offset + 8));
+        entity.setSetTemp(cursor.getInt(offset + 9));
+        entity.setCurrentTemp(cursor.getInt(offset + 10));
+        entity.setError(cursor.getInt(offset + 11));
+        entity.setState(cursor.getInt(offset + 12));
      }
     
     @Override

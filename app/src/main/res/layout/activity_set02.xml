@@ -135,6 +135,7 @@
                 />
         </LinearLayout>
         <Button
+            android:id="@+id/btn_submit"
             android:layout_marginTop="@dimen/dp_50"
             android:layout_below="@+id/rl_layout"
             android:layout_width="match_parent"

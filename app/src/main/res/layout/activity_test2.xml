@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.TestActivity2">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <Button
+            android:layout_marginTop="@dimen/dp_10"
+            android:layout_marginLeft="@dimen/dp_10"
+            android:id="@+id/btn_basic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="开关" />
+
+        <Button
+            android:layout_alignTop="@+id/btn_basic"
+            android:layout_toRightOf="@+id/btn_basic"
+            android:id="@+id/btn_hand"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="手动" />
+        <Button
+            android:layout_alignTop="@+id/btn_basic"
+            android:layout_toRightOf="@+id/btn_hand"
+            android:id="@+id/btn_lock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="童锁" />
+        <Button
+            android:layout_alignTop="@+id/btn_basic"
+            android:layout_toRightOf="@+id/btn_lock"
+            android:id="@+id/btn_ai"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="智能" />
+        <Button
+            android:layout_below="@+id/btn_basic"
+            android:layout_alignLeft="@+id/btn_basic"
+            android:id="@+id/btn_timer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="日定时" />
+        <Button
+            android:layout_below="@+id/btn_basic"
+            android:layout_toRightOf="@+id/btn_timer"
+            android:id="@+id/btn_timer2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="周定时" />
+        <Button
+            android:layout_below="@+id/btn_basic"
+            android:layout_toRightOf="@+id/btn_timer2"
+            android:id="@+id/btn_store"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="恢复设置" />
+        <Button
+            android:layout_below="@+id/btn_timer"
+            android:layout_alignLeft="@id/btn_basic"
+            android:id="@+id/btn_day"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="日定时计划" />
+        <Button
+            android:layout_alignTop="@+id/btn_day"
+            android:layout_toRightOf="@id/btn_day"
+            android:id="@+id/btn_week"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="周定时计划" />
+    </RelativeLayout>
+</android.support.constraint.ConstraintLayout>

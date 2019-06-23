@@ -60,7 +60,7 @@
                 android:id="@+id/tv_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="20"
+                android:text="0"
                 android:layout_toLeftOf="@+id/tv_flag"
                 android:textColor="@color/color_orange"
                 android:layout_alignTop="@id/tv_name"
@@ -86,7 +86,7 @@
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 app:rsb_max="10"
-                app:rsb_min="1"
+                app:rsb_min="0"
                 app:rsb_mode="single"
                 app:rsb_progress_color="@color/color_orange"
                 app:rsb_progress_default_color="@color/gray"
@@ -111,6 +111,7 @@
                 />
         </RelativeLayout>
         <Button
+            android:id="@+id/btn_submit"
             android:layout_marginTop="@dimen/dp_50"
             android:layout_below="@+id/rl_layout"
             android:layout_width="match_parent"

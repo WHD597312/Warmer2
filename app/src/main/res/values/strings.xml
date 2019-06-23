@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Warmer</string>
     <string name="location">定位</string>
+    <string name="load">正在加载,请稍后！</string>
+    <string name="match">正在配置,请耐心等待！</string>
+    <string name="save">存储</string>
 </resources>

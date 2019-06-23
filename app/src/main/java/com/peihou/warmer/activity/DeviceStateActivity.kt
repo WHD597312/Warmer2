@@ -8,8 +8,18 @@ import com.peihou.warmer.R
 import com.peihou.warmer.base.BaseActivity
 import com.peihou.warmer.chart.LineChartManager
 import kotlinx.android.synthetic.main.activity_device_state.*
+import me.jessyan.autosize.internal.CustomAdapt
+import java.util.*
 
-class DeviceStateActivity : BaseActivity() {
+class DeviceStateActivity : BaseActivity(),CustomAdapt {
+    override fun isBaseOnWidth(): Boolean {
+        return false
+    }
+
+    override fun getSizeInDp(): Float {
+        return 667f
+    }
+
     private var xValues= mutableListOf<Int>()
     private var yValues= mutableListOf<Int>()
     override fun initParms(parms: Bundle?) {
@@ -19,13 +29,13 @@ class DeviceStateActivity : BaseActivity() {
     override fun bindLayout(): Int {
         return R.layout.activity_device_state
     }
-
+    var random= Random()
     override fun initView() {
         for (i in 0 .. 23){
             xValues.add(i)
         }
-        for(i in 10..33){
-            yValues.add(i)
+        for(i in 0..23){
+            yValues.add(random.nextInt(60))
         }
         val lineChartManager = LineChartManager(line_chart)
         //创建多条折线的图表

@@ -128,7 +128,7 @@
             android:layout_marginTop="@dimen/dp_50"
             android:id="@+id/btn_login"
             android:layout_width="@dimen/dp_150"
-            android:layout_height="@dimen/dp_35"
+            android:layout_height="@dimen/dp_40"
             android:text="注册"
             android:background="@drawable/shape_login"
             android:layout_below="@+id/rl_repswd"

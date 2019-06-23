@@ -19,8 +19,9 @@ import kotlinx.android.synthetic.main.item_advance.view.*
 class AdvanceSetActivity : BaseActivity() {
     var list= mutableListOf<String>()
     var adapter:SetAdapter?=null
+    var deviceMac:String?=null
     override fun initParms(parms: Bundle?) {
-
+        deviceMac=parms?.getString("deviceMac")
     }
 
     override fun bindLayout(): Int {
@@ -28,7 +29,6 @@ class AdvanceSetActivity : BaseActivity() {
     }
 
     override fun initView() {
-
         list.add("回差温度设置")
         list.add(("系统类型"))
         list.add("温度校正")
@@ -43,10 +43,22 @@ class AdvanceSetActivity : BaseActivity() {
         adapter=SetAdapter(this,list)
         rl_set.adapter=adapter
     }
+
+    override fun onBackPressed() {
+        var intent=Intent()
+        intent.putExtra("advanceArray",advanceArray)
+        setResult(100,intent)
+        super.onBackPressed()
+    }
     @OnClick(R.id.img_back)
     fun onClick(view: View){
         when(view.id){
-            R.id.img_back->finish()
+            R.id.img_back->{
+                var intent=Intent()
+                intent.putExtra("advanceArray",advanceArray)
+                setResult(100,intent)
+                finish()
+            }
         }
     }
     inner class SetAdapter(private var context: Context,private var list: List<String>):RecyclerView.Adapter<ViewHolder>(){
@@ -76,25 +88,37 @@ class AdvanceSetActivity : BaseActivity() {
             holder.itemView.setOnClickListener {
                 when(position){
                     0,2,3,4,5,6->{
-                        var intent = Intent(context, Set01Activity::class.java)
+                        var intent = Intent(this@AdvanceSetActivity, Set01Activity::class.java)
                         intent.putExtra("position",position)
-                        startActivity(intent)
+                        intent.putExtra("deviceMac",deviceMac)
+                        startActivityForResult(intent,100)
                     }
-                    1->
-                        startActivity(Set02Activity::class.java)
-                    7->
-                        startActivity(Set03Activity::class.java)
+                    1->{
+                        var intent=Intent(this@AdvanceSetActivity,Set02Activity::class.java)
+                        intent.putExtra("deviceMac",deviceMac)
+                        startActivityForResult(intent,100)            }
+                    7->{
+                        var intent=Intent(this@AdvanceSetActivity,Set03Activity::class.java)
+                        intent.putExtra("deviceMac",deviceMac)
+                        startActivityForResult(intent,100)
+                    }
                     8,9->{
-                        var intent = Intent(context, Set04Activity::class.java)
+                        var intent = Intent(this@AdvanceSetActivity, Set04Activity::class.java)
+                        intent.putExtra("deviceMac",deviceMac)
                         intent.putExtra("position",position)
-                        startActivity(intent)
+                        startActivityForResult(intent,100)
                     }
-
                 }
-
             }
         }
+    }
 
+    private var advanceArray: IntArray = IntArray(15)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode==100){
+            advanceArray=data.getIntArrayExtra("advanceArray")
+        }
     }
     inner class ViewHolder(itemView:View):RecyclerView.ViewHolder(itemView){
         var img_set:ImageView?=null

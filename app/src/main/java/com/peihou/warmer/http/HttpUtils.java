@@ -30,7 +30,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class HttpUtils {
 
-    public static String ipAddress = "http://47.111.101.184:8095/qjjc/";
+    public static String ipAddress = "http://192.168.1.27:8098/app/";
 
 
     static Interceptor REWRITE_CACHE_CONTROL_INTERCEPTOR = new Interceptor() {
@@ -65,7 +65,8 @@ public class HttpUtils {
         }
     };
 
-    public static String baseUrl = "http://47.111.101.184:8095/qjjc/";
+    public static String baseUrl = "http://192.168.1.27:8098/app/";
+    private static String weatherUrl="http://apicloud.mob.com/v1/weather/";
 
     public static String requestPost(String url, Map<String, Object> params) {
         String result = null;
@@ -98,15 +99,22 @@ public class HttpUtils {
         return result;
     }
 
-    public static String requestGet(String url) {
+
+    public static String requestGet(String url,int code) {
         String result = null;
         try {
+            String baseUrl2="";
+            if (code==1){
+                baseUrl2=weatherUrl;
+            }else if (code==2){
+                baseUrl2=baseUrl;
+            }
             File httpCacheDirectory = new File(MyApplication.getContext().getCacheDir(), "HttpCache");//这里为了方便直接把文件放在了SD卡根目录的HttpCache中，一般放在context.getCacheDir()中
             int cacheSize = 10 * 1024 * 1024;//设置缓存文件大小为10M
             Cache cache = new Cache(httpCacheDirectory, cacheSize);
             Retrofit retrofit = new Retrofit.Builder()
                     .addConverterFactory(GsonConverterFactory.create())
-                    .baseUrl(baseUrl)
+                    .baseUrl(baseUrl2)
                     .client(new OkHttpClient.Builder()
                     .connectTimeout(3, TimeUnit.SECONDS)//设置连接超时
                     .readTimeout(5, TimeUnit.SECONDS)//读取超时

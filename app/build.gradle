@@ -3,12 +3,18 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
 apply plugin: 'org.greenrobot.greendao'
+apply plugin: 'com.mob.sdk'
 
 
+MobSDK {
+    appKey "2b59cd5d85164"
+    appSecret "fa727f2a73eade490e6a386665f7a376"
 
+    ShareSDK {}
 
+}
 greendao {
-    schemaVersion 2
+    schemaVersion 5
     daoPackage 'com.peihou.warmer.database.dao'
     targetGenDir 'src/main/java'
 }
@@ -79,5 +85,8 @@ dependencies {
     //添加依赖loopView
     implementation 'com.weigan:loopView:0.1.2'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.0.2'
-
+    implementation files('libs/AMap_Location_V4.6.0_20190423.jar')
+    implementation project(':DamonService')
+    implementation files('libs/LibOneShotConfig2.0.jar')
+    implementation 'com.github.donkingliang:ImageSelector:1.6.8'
 }
