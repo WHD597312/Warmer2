@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.location.LocationManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -71,7 +72,7 @@ import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.AppSettingsDialog;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class AddDeviceActivity extends BaseActivity implements EasyPermissions.PermissionCallbacks{
+public class AddDeviceActivity extends BaseActivity implements EasyPermissions.PermissionCallbacks {
 
     @BindView(R.id.btn_match)
     Button btn_match;
@@ -82,12 +83,20 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
 
     @BindView(R.id.tv_wifi)
     TextView et_ssid;
-    @BindView(R.id.et_pswd) EditText et_pswd;
-    @BindView(R.id.rl_bottom) RelativeLayout rl_bottom;
+    @BindView(R.id.et_pswd)
+    EditText et_pswd;
+    @BindView(R.id.rl_bottom)
+    RelativeLayout rl_bottom;
     private int match = 0;
 
     private String wifiName;
+    private String wifiPswd;
     private boolean isMatching = false;
+
+    @Override
+    protected int setStatusColor(int color) {
+        return Color.parseColor("#00ffffff");
+    }
 
     @OnClick({R.id.img_back, R.id.btn_match})
     public void onClick(View view) {
@@ -134,26 +143,25 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
                             ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "请输入wifi密码");
                             break;
                         }
-                        if (!TextUtils.isEmpty(ssid)) {
-//                    popupWindow();
-                            match = 1;
-                            et_ssid.setEnabled(false);
-                            et_pswd.setEnabled(false);
-                            btn_match.setEnabled(false);
-//                            setLoadDialog2();
-                            wifiName = ssid;
-                            isMatching = true;
 
-                            isThreadDisable=false;
-                            udpHelperAsync=new UDPHelperAsync();
-                            udpHelperAsync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                            congigAsync=new CongigAsync();
-                            congigAsync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,ssid,apBssid);
-//                            params.put("deviceMac",ssid);
-//                            params.put("userId",userId);
-//                            new AddDeviceAsync(AddDeviceActivity.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,params).get(3000, TimeUnit.SECONDS);
+//                    popupWindow();
+                        match = 1;
+                        et_ssid.setEnabled(false);
+                        et_pswd.setEnabled(false);
+                        btn_match.setEnabled(false);
+//                            setLoadDialog2();
+                        wifiName = ssid;
+                        wifiPswd = apPassword;
+                        isMatching = true;
+
+                        isThreadDisable = false;
+                        udpHelperAsync = new UDPHelperAsync();
+                        udpHelperAsync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                        congigAsync = new CongigAsync();
+                        congigAsync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, wifiName, wifiPswd);
+
 //                            new EsptouchAsyncTask3().execute(ssid, apBssid, apPassword, taskResultCountStr);
-                        }
+
                     } else {
                         ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "请检查网络");
                     }
@@ -166,14 +174,16 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
     }
 
 
-    boolean isThreadDisable=false;
+    boolean isThreadDisable = false;
     UDPHelperAsync udpHelperAsync;
     DatagramSocket datagramSocket;
-    class UDPHelperAsync extends AsyncTask<Void,Void,Integer>{
+    String deviceMac = "";
+
+    class UDPHelperAsync extends AsyncTask<Void, Void, Integer> {
 
         @Override
         protected Integer doInBackground(Void... voids) {
-            int code=0;
+            int code = 0;
             Integer port = 65534;
             // 接收的字节大小，客户端发送的数据不能超过这个大小
             byte[] message = new byte[100];
@@ -181,37 +191,37 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
                 // 建立Socket连接
                 datagramSocket = new DatagramSocket(port);
                 datagramSocket.setBroadcast(true);
-                datagramSocket.setSoTimeout(1000*60);
+                datagramSocket.setSoTimeout(1000 * 60);
                 DatagramPacket datagramPacket = new DatagramPacket(message,
                         message.length);
                 try {
                     while (!isThreadDisable) {
                         // 准备接收数据
                         Log.i("UDPHelperAsync", "准备接受");
-                        try{
+                        try {
                             datagramSocket.receive(datagramPacket);
-                            String strMsg="";
-                            int count = datagramPacket.getLength();
-                            for(int i=0;i<count;i++){
-                                strMsg += String.format("%02x", datagramPacket.getData()[i]);
-                            }
-                            strMsg = strMsg.toUpperCase() + ";" + datagramPacket.getAddress().getHostAddress().toString();
+                            String strMsg = new String(datagramPacket.getData(), "UTF-8");
+//                            int count = datagramPacket.getLength();
+//                            for(int i=0;i<count;i++){
+//                                strMsg += String.format("%02x", datagramPacket.getData()[i]);
+//                            }
+                            deviceMac = wifiName + strMsg;
+//                            strMsg = strMsg.toUpperCase() + ";" + datagramPacket.getAddress().getHostAddress().toString();
 
                             Log.i("UDPHelperAsync", datagramPacket.getAddress()
                                     .getHostAddress().toString()
-                                    + ":" +strMsg );
-                        }
-                        catch(SocketTimeoutException ex){
+                                    + ":" + strMsg);
+                            code = 100;
+                        } catch (Exception ex) {
                             Log.i("UDPHelperAsync", "UDP Receive Timeout.");
-                            code=-1;
+                            code = -1;
                             return -1;
                         }
                     }
-                } catch (IOException e) {//IOException
+                } catch (Exception e) {//IOException
                     e.printStackTrace();
-                }
-                finally {
-                    Log.i("UDPHelperAsync","释放资源");
+                } finally {
+                    Log.i("UDPHelperAsync", "释放资源");
                     datagramSocket.close();
                 }
             } catch (SocketException e) {
@@ -223,29 +233,38 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
         @Override
         protected void onPostExecute(Integer code) {
             super.onPostExecute(code);
-            if (code==-1){
-                datagramSocket=null;
-                if (dialogLoad!=null && dialogLoad.isShowing()){
-                    dialogLoad.dismiss();
+            if (code == -1) {
+                datagramSocket = null;
+                if (popupWindow2 != null && popupWindow2.isShowing()) {
+                    popupWindow2.dismiss();
                 }
+                ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "配置失败");
+            } else if (code == 100) {
+//                ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this,deviceMac);
+                params.put("deviceMac", deviceMac);
+                params.put("userId", userId);
+                new AddDeviceAsync(AddDeviceActivity.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
             }
         }
     }
+
     CongigAsync congigAsync;
-    class CongigAsync extends AsyncTask<String,Void,Integer>{
+
+    class CongigAsync extends AsyncTask<String, Void, Integer> {
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-           popupmenuWindow3();
+            popupmenuWindow3();
         }
 
         @Override
         protected Integer doInBackground(String... strings) {
-            int code=0;
-            String ssid=strings[0];
-            String pswd=strings[1];
-            oneshotConfig.start(ssid,pswd,60,AddDeviceActivity.this);
+            int code = 0;
+            String ssid = strings[0];
+            String pswd = strings[1];
+            Log.i("ssid","-->"+ssid+","+pswd);
+            oneshotConfig.start(ssid, pswd, 60, AddDeviceActivity.this);
             return null;
         }
 
@@ -255,7 +274,8 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
 
         }
     }
-    class AddDeviceAsync extends BaseWeakAsyncTask<Map<String,Object>,Void,Integer,AddDeviceActivity>{
+
+    class AddDeviceAsync extends BaseWeakAsyncTask<Map<String, Object>, Void, Integer, AddDeviceActivity> {
 
         public AddDeviceAsync(AddDeviceActivity addDeviceActivity) {
             super(addDeviceActivity);
@@ -263,14 +283,17 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
 
         @Override
         protected Integer doInBackground(AddDeviceActivity addDeviceActivity, Map<String, Object>... maps) {
-            int returnCode=0;
-            String url= HttpUtils.ipAddress+"device/insertDevice";
-            Map<String,Object> params=maps[0];
-            String result=HttpUtils.requestPost(url,params);
+            int returnCode = 0;
+            String url = HttpUtils.ipAddress + "device/insertDevice";
+            Map<String, Object> params = maps[0];
+            String result = HttpUtils.requestPost(url, params);
             try {
-                if (!TextUtils.isEmpty(result)){
-                    JSONObject jsonObject=new JSONObject(result);
-                    returnCode=jsonObject.getInt("returnCode");
+                if (!TextUtils.isEmpty(result)) {
+                    JSONObject jsonObject = new JSONObject(result);
+                    returnCode = jsonObject.getInt("returnCode");
+                    SharedPreferences.Editor editor = wifi.edit();
+                    editor.putString(wifiName,wifiPswd);
+                    editor.commit();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -280,35 +303,39 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
 
         @Override
         protected void onPostExecute(AddDeviceActivity addDeviceActivity, Integer returnCode) {
-            if (dialogLoad!=null && dialogLoad.isShowing()){
-                dialogLoad.dismiss();
+            if (popupWindow2 != null && popupWindow2.isShowing()) {
+                popupWindow2.dismiss();
             }
-            if (returnCode==200){
-                ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this,"添加设备成功");
+            if (returnCode == 200) {
+                ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "添加设备成功");
                 setResult(100);
                 finish();
-            }else {
-                ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this,"添加失败,请重置设备重新添加");
+            } else {
+                ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "添加失败,请重置设备重新添加");
             }
         }
     }
+
     int userId;
-    private Map<String,Object> params=new HashMap<>();
+    private Map<String, Object> params = new HashMap<>();
+
     @Override
     public void initParms(Bundle parms) {
-        userId=parms.getInt("userId");
+        userId = parms.getInt("userId");
     }
 
     @Override
     public int bindLayout() {
         return R.layout.activity_add_device;
     }
+
     SharedPreferences wifi;
     private SmartConfigFactory factory = null;
     private IOneShotConfig oneshotConfig = null;
+
     @Override
     public void initView() {
-        wifi= getSharedPreferences("wifi", MODE_PRIVATE);
+        wifi = getSharedPreferences("wifi", MODE_PRIVATE);
         mWifiAdmin = new EspWifiAdminSimple(this);
         et_ssid.setFocusable(false);
         registerBroadcastReceiver();
@@ -318,8 +345,6 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
         //通过修改参数ConfigType，确定使用何种方式进行一键配置，需要和固件侧保持一致。
         oneshotConfig = factory.createOneShotConfig(ConfigType.UDP);
     }
-
-
 
 
     private static final String TAG = "Esptouch";
@@ -364,7 +389,6 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
             bound = false;
         }
     };
-
 
 
     String macAddress;
@@ -423,20 +447,20 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
                     StringBuilder sb = new StringBuilder();
                     String ssid = "";
                     try {
-                        String deviceMac="";
+                        String deviceMac = "";
                         Log.i("diff", "-->" + System.currentTimeMillis());
                         for (IEsptouchResult resultInList : result) {
                             ssid = resultInList.getBssid();
                             Log.i("ssidssid", "-->" + ssid);
                             sb.append("配置成功");
                             String wifiName = et_ssid.getText().toString();
-                             deviceMac= wifiName + ssid;
+                            deviceMac = wifiName + ssid;
 
-                             if (!TextUtils.isEmpty(deviceMac)){
-                                 dialogLoad.dismiss();
-                                 params.put("deviceMac",deviceMac);
-                                 params.put("userId",userId);
-                                 new AddDeviceAsync(AddDeviceActivity.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                            if (!TextUtils.isEmpty(deviceMac)) {
+                                dialogLoad.dismiss();
+                                params.put("deviceMac", deviceMac);
+                                params.put("userId", userId);
+                                new AddDeviceAsync(AddDeviceActivity.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 //                                 ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this,deviceMac);
 //                                 SharedPreferences.Editor editor=wifi.edit();
 //                                 String wifiPassword = et_pswd.getText().toString();
@@ -446,8 +470,8 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
 //                                 intent.putExtra("deviceMac",deviceMac);
 //                                 setResult(100,intent);
 //                                 finish();
-                                 break;
-                             }
+                                break;
+                            }
                             count++;
                             if (count >= maxDisplayCount) {
                                 break;
@@ -462,28 +486,28 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
                                 + " more result(s) without showing\n");
                     }
                 } else {
-                    if (dialogLoad != null && dialogLoad.isShowing()) {
+                    if (popupWindow2 != null && popupWindow2.isShowing()) {
                         isMatching = false;
                         wifiName = "";
 
 
-                            if (et_ssid != null) {
-                                et_ssid.setEnabled(true);
-                            }
-                            if (et_pswd != null) {
-                                et_pswd.setEnabled(true);
-                            }
-                            if (btn_match != null) {
-                                btn_match.setEnabled(true);
-                                ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "配置失败");
-                            }
+                        if (et_ssid != null) {
+                            et_ssid.setEnabled(true);
+                        }
+                        if (et_pswd != null) {
+                            et_pswd.setEnabled(true);
+                        }
+                        if (btn_match != null) {
+                            btn_match.setEnabled(true);
+                            ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "配置失败");
+                        }
 
-                            if (mEsptouchTask != null) {
-                                mEsptouchTask.interrupt();
-                            }
+                        if (mEsptouchTask != null) {
+                            mEsptouchTask.interrupt();
+                        }
 
                         match = 0;
-                      dialogLoad.dismiss();
+                        popupWindow2.dismiss();
                     }
                 }
             }
@@ -507,13 +531,13 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
                 popupWindow2.dismiss();
                 return false;
             }
-            finish();
-            return true;
         }
         return super.onKeyDown(keyCode, event);
     }
+
     private PopupWindow popupWindow2;
     AVLoadingIndicatorView avi;
+
     public void popupmenuWindow3() {
         if (popupWindow2 != null && popupWindow2.isShowing()) {
             return;
@@ -536,6 +560,22 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
         popupWindow2.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
+                if (!isThreadDisable && datagramSocket != null) {
+                    datagramSocket.close();
+                }
+                isThreadDisable = true;
+                if (udpHelperAsync != null) {
+                    udpHelperAsync.cancel(true);
+                }
+                if (congigAsync != null) {
+                    congigAsync.cancel(true);
+                }
+                udpHelperAsync = null;
+                congigAsync = null;
+                oneshotConfig.stop();
+                et_ssid.setEnabled(true);
+                et_pswd.setEnabled(true);
+                btn_match.setEnabled(true);
                 backgroundAlpha(1.0f);
             }
         });
@@ -600,9 +640,9 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
                 unregisterReceiver(mReceiver);
             }
 
-                if (bound) {
-                    unbindService(connection);
-                }
+            if (bound) {
+                unbindService(connection);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -641,7 +681,9 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
     public void onPermissionsGranted(int requestCode, List<String> perms) {
 
     }
+
     private static final int RC_CAMERA_AND_LOCATION = 0;
+
     @AfterPermissionGranted(RC_CAMERA_AND_LOCATION)
     private void permissionGrantedSuccess() {
         String[] perms = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION};
@@ -654,7 +696,8 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
         }
     }
 
-    boolean isNeedCheck=true;
+    boolean isNeedCheck = true;
+
     @Override
     public void onPermissionsDenied(int requestCode, List<String> perms) {
         if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
@@ -669,6 +712,7 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
             isNeedCheck = false;
         }
     }
+
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -697,101 +741,101 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
     };
     String bSsid;
 
-        private void onWifiChanged(WifiInfo info) {
+    private void onWifiChanged(WifiInfo info) {
 
-            if (info == null) {
-                et_ssid.setText("");
-                et_pswd.setText("");
-                ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "WiFi已中断，请连接WiFi重新配置");
-                if (mEsptouchTask != null) {
-                    mEsptouchTask.interrupt();
-                }
-                if (dialogLoad != null && dialogLoad.isShowing()) {
-                    et_ssid.setEnabled(true);
-                    et_pswd.setEnabled(true);
-                    btn_match.setEnabled(true);
-                    dialogLoad.dismiss();
-                    backgroundAlpha(1f);
-                }
-            } else {
-                String apSsid = info.getSSID();
-                bSsid = info.getBSSID();
-                if (apSsid.startsWith("\"") && apSsid.endsWith("\"")) {
-                    apSsid = apSsid.substring(1, apSsid.length() - 1);
-                    if ("<unknown ssid>".equals(apSsid)) {
-                        et_ssid.setText("");
-                        et_pswd.setText("");
-                    }
-                }
-
-                if (wifi.contains(apSsid)) {
-                    et_ssid.setText(apSsid);
-                    String pswd = wifi.getString(apSsid, "");
-                    et_pswd.setText(pswd);
-                } else {
-                    et_ssid.setText(apSsid);
-                    et_pswd.setText("");
-                    if ("<unknown ssid>".equals(apSsid)) {
-                        et_ssid.setText("");
-                        et_pswd.setText("");
-                    }
-                }
-                if (!TextUtils.isEmpty(apSsid)) {
-                    if (apSsid.contains("+") || apSsid.contains("/") || apSsid.contains("#")) {
-                        et_ssid.setText("");
-                        ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "WiFi名称为不含有+/#特殊符号的英文");
-                    } else {
-                        char[] chars = apSsid.toCharArray();
-                        et_ssid.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "WiFi名称不可编辑");
-                            }
-                        });
-
-                        for (char c : chars) {
-                            if (IsChinese.isChinese(c)) {
-                                ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "WiFi名称不能是中文");
-                                et_ssid.setText("");
-                                et_pswd.setText("");
-                                break;
-                            }
-                        }
-                    }
-                } else {
+        if (info == null) {
+            et_ssid.setText("");
+            et_pswd.setText("");
+            ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "WiFi已中断，请连接WiFi重新配置");
+            if (mEsptouchTask != null) {
+                mEsptouchTask.interrupt();
+            }
+            if (popupWindow2 != null && popupWindow2.isShowing()) {
+                et_ssid.setEnabled(true);
+                et_pswd.setEnabled(true);
+                btn_match.setEnabled(true);
+                popupWindow2.dismiss();
+                backgroundAlpha(1f);
+            }
+        } else {
+            String apSsid = info.getSSID();
+            bSsid = info.getBSSID();
+            if (apSsid.startsWith("\"") && apSsid.endsWith("\"")) {
+                apSsid = apSsid.substring(1, apSsid.length() - 1);
+                if ("<unknown ssid>".equals(apSsid)) {
                     et_ssid.setText("");
+                    et_pswd.setText("");
+                }
+            }
+
+            if (wifi.contains(apSsid)) {
+                et_ssid.setText(apSsid);
+                String pswd = wifi.getString(apSsid, "");
+                et_pswd.setText(pswd);
+            } else {
+                et_ssid.setText(apSsid);
+                et_pswd.setText("");
+                if ("<unknown ssid>".equals(apSsid)) {
+                    et_ssid.setText("");
+                    et_pswd.setText("");
+                }
+            }
+            if (!TextUtils.isEmpty(apSsid)) {
+                if (apSsid.contains("+") || apSsid.contains("/") || apSsid.contains("#")) {
+                    et_ssid.setText("");
+                    ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "WiFi名称为不含有+/#特殊符号的英文");
+                } else {
+                    char[] chars = apSsid.toCharArray();
                     et_ssid.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "请连接英文名称的wifi");
+                            ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "WiFi名称不可编辑");
                         }
                     });
-                    et_pswd.setText("");
-                }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    int frequence = info.getFrequency();
-                    if (frequence > 4900 && frequence < 5900) {
-                        // Connected 5G wifi. Device does not support 5G
-                        et_ssid.setText("");
-                        et_ssid.setHint("不支持5G WiFi");
-                        et_pswd.setText("");
+
+                    for (char c : chars) {
+                        if (IsChinese.isChinese(c)) {
+                            ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "WiFi名称不能是中文");
+                            et_ssid.setText("");
+                            et_pswd.setText("");
+                            break;
+                        }
                     }
                 }
-                if (isMatching && !TextUtils.isEmpty(wifiName) && !wifiName.equals(apSsid)) {
-                    isMatching = false;
-                    wifiName = "";
-                    ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "WiFi已切换,请重新配置");
-                    if (mEsptouchTask != null) {
-                        mEsptouchTask.interrupt();
+            } else {
+                et_ssid.setText("");
+                et_ssid.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "请连接英文名称的wifi");
                     }
-                    if (dialogLoad != null && dialogLoad.isShowing()) {
-                        et_ssid.setEnabled(true);
-                        et_pswd.setEnabled(true);
-                        btn_match.setEnabled(true);
-                        dialogLoad.dismiss();
-                        backgroundAlpha(1f);
-                    }
+                });
+                et_pswd.setText("");
+            }
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//                    int frequence = info.getFrequency();
+//                    if (frequence > 4900 && frequence < 5900) {
+//                        // Connected 5G wifi. Device does not support 5G
+//                        et_ssid.setText("");
+//                        et_ssid.setHint("不支持5G WiFi");
+//                        et_pswd.setText("");
+//                    }
+//                }
+            if (isMatching && !TextUtils.isEmpty(wifiName) && !wifiName.equals(apSsid)) {
+                isMatching = false;
+                wifiName = "";
+                ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this, "WiFi已切换,请重新配置");
+                if (mEsptouchTask != null) {
+                    mEsptouchTask.interrupt();
+                }
+                if (popupWindow2 != null && popupWindow2.isShowing()) {
+                    et_ssid.setEnabled(true);
+                    et_pswd.setEnabled(true);
+                    btn_match.setEnabled(true);
+                    popupWindow2.dismiss();
+                    backgroundAlpha(1f);
                 }
             }
         }
+    }
 }

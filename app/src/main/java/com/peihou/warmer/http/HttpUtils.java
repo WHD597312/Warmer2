@@ -30,7 +30,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class HttpUtils {
 
-    public static String ipAddress = "http://192.168.1.27:8098/app/";
+    public static String ipAddress = "http://47.110.132.149:8098/app/";
 
 
     static Interceptor REWRITE_CACHE_CONTROL_INTERCEPTOR = new Interceptor() {
@@ -65,9 +65,15 @@ public class HttpUtils {
         }
     };
 
-    public static String baseUrl = "http://192.168.1.27:8098/app/";
+    public static String baseUrl = "http://47.110.132.149:8098/app/";
     private static String weatherUrl="http://apicloud.mob.com/v1/weather/";
 
+    /**
+     * POST请求
+     * @param url
+     * @param params
+     * @return
+     */
     public static String requestPost(String url, Map<String, Object> params) {
         String result = null;
         try {
@@ -100,6 +106,12 @@ public class HttpUtils {
     }
 
 
+    /**
+     * get请求
+     * @param url
+     * @param code
+     * @return
+     */
     public static String requestGet(String url,int code) {
         String result = null;
         try {
@@ -109,9 +121,9 @@ public class HttpUtils {
             }else if (code==2){
                 baseUrl2=baseUrl;
             }
-            File httpCacheDirectory = new File(MyApplication.getContext().getCacheDir(), "HttpCache");//这里为了方便直接把文件放在了SD卡根目录的HttpCache中，一般放在context.getCacheDir()中
-            int cacheSize = 10 * 1024 * 1024;//设置缓存文件大小为10M
-            Cache cache = new Cache(httpCacheDirectory, cacheSize);
+//            File httpCacheDirectory = new File(MyApplication.getContext().getCacheDir(), "HttpCache");//这里为了方便直接把文件放在了SD卡根目录的HttpCache中，一般放在context.getCacheDir()中
+//            int cacheSize = 10 * 1024 * 1024;//设置缓存文件大小为10M
+//            Cache cache = new Cache(httpCacheDirectory, cacheSize);
             Retrofit retrofit = new Retrofit.Builder()
                     .addConverterFactory(GsonConverterFactory.create())
                     .baseUrl(baseUrl2)
@@ -120,7 +132,6 @@ public class HttpUtils {
                     .readTimeout(5, TimeUnit.SECONDS)//读取超时
                     .writeTimeout(5, TimeUnit.SECONDS)//写入超时
                     .addNetworkInterceptor(REWRITE_CACHE_CONTROL_INTERCEPTOR)//添加自定义缓存拦截器（后面讲解），注意这里需要使用.addNetworkInterceptor
-                    .cache(cache)//把缓存添加进来
                     .build())
                     .build();
             HttpService httpService = retrofit.create(HttpService.class);
@@ -135,7 +146,13 @@ public class HttpUtils {
     }
 
 
-
+    /**
+     *
+     * 上传个人信息和头像文件
+     * @param paramsMap
+     * @param file
+     * @return
+     */
     public static String uploadFile(Map<String,Object> paramsMap, File file){
         String result=null;
         try {
@@ -150,20 +167,20 @@ public class HttpUtils {
 
             // 执行请求
 
-            Map<String, RequestBody> requestBodyMap = new HashMap<>();
-            for (Map.Entry<String, Object> entry:paramsMap.entrySet()){
-                String key=entry.getKey();
-                String value=entry.getValue()+"";
-                RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), value);
-                requestBodyMap.put(key, requestBody);
-            }
+//            Map<String, RequestBody> requestBodyMap = new HashMap<>();
+//            for (Map.Entry<String, Object> entry:paramsMap.entrySet()){
+//                String key=entry.getKey();
+//                String value=entry.getValue()+"";
+//                RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), value);
+//                requestBodyMap.put(key, requestBody);
+//            }
 
 
             RequestBody requestFile =
                     RequestBody.create(MediaType.parse("image/jpg"), file);
             MultipartBody.Part body =
                     MultipartBody.Part.createFormData("file", file.getName(), requestFile);
-            Call<ResponseBody> call = userService.uploadFile(requestBodyMap,body);
+            Call<ResponseBody> call = userService.uploadFile(paramsMap,body);
             retrofit2.Response<ResponseBody> response=call.execute();
             boolean success=response.isSuccessful();
             if (success){
@@ -175,4 +192,45 @@ public class HttpUtils {
         return result;
     }
 
+    /**
+     * POST请求FORM表单
+     * 上传多个文件和多个字段
+     * @param url
+     * @param paramsMap
+     * @param filesMap
+     * @return
+     */
+    public static String upLoadFileAndDesc(String url,Map<String,Object> paramsMap,Map<String,Object> filesMap){
+        String result=null;
+        try {
+            Retrofit retrofit=new Retrofit.Builder()
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .baseUrl(baseUrl)
+                    .build();
+            HttpService userService=retrofit.create(HttpService.class);
+
+            MultipartBody.Builder requestBodyMap = new MultipartBody.Builder().setType(MultipartBody.FORM);
+            for (Map.Entry<String,Object> entry:paramsMap.entrySet()){
+                String key=entry.getKey();
+                String value=entry.getValue()+"";
+                requestBodyMap.addFormDataPart(key,value);
+            }
+            //入参-文件
+            for (Map.Entry entry : filesMap.entrySet()) {
+                File file = (File) entry.getValue();
+                RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), file);
+                String fileName = file.getName();
+                requestBodyMap.addFormDataPart("files", fileName, requestFile);
+            }
+            retrofit2.Call<ResponseBody> call = userService.upLoadFileAndDesc(url,requestBodyMap.build());
+            retrofit2.Response<ResponseBody> response=call.execute();
+            boolean success=response.isSuccessful();
+            if (success){
+                result=response.body().string();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return result;
+    }
 }

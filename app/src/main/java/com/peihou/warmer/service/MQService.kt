@@ -245,7 +245,7 @@ class MQService : AbsHeartBeatService() {
     /**
      * 连接mqtt
      */
-    fun connect(state: Int) {
+    private fun connect(state: Int) {
         try {
             ConAsync(this@MQService).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, state)
         } catch (e: Exception) {
@@ -342,7 +342,7 @@ class MQService : AbsHeartBeatService() {
     /**
      * 正在连接mqtt
      */
-    fun isConnecting(client: MqttClient?): Boolean {
+    private fun isConnecting(client: MqttClient?): Boolean {
         var flag = false
         if (client != null) {
             flag = client.isConnected
