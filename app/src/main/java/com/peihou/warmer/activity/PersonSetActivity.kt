@@ -163,13 +163,19 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
         }
         changeDialog?.show()
         changeDialog?.setOnNegativeClickListener {
+            backgroundAlpha(1.0f)
             changeDialog?.dismiss()
         }
         changeDialog?.setOnPositiveClickListener {
-            changeDialog?.dismiss()
-            if (code == 2) {
-                downLoadApp()
+            if (code==2){
+                ToastUtils.toastShort(this,"已是最新版本")
+            }else if (code==1){
+                ToastUtils.toastShort(this,"缓存已清除!")
             }
+            backgroundAlpha(1.0f)
+            changeDialog?.dismiss()
+
+
         }
         backgroundAlpha(0.6f)
         changeDialog?.setOnDismissListener {
@@ -181,7 +187,7 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
 
 
     internal var dialog: DownloadDialog? = null
-    var downloadUrl = "http://oss.pgyer.com/0872e17c0d173fa4672c2b6894ec1323.apk?auth_key=1560936257-1e6a6bd00ce2b79a89acafb90a2583c6-0-534fb04206490034e4cfc98056c439d0&response-content-disposition=attachment%3B+filename%3Dapp-release.apk"
+    var downloadUrl = "https://o.app.qq.com/image/microQr.png?template=1&pkgName=com.peihou.willgood2"
     private var timer: Timer? = null
     var id: Long = 0
     private fun downDialog() {

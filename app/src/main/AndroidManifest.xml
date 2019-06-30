@@ -103,7 +103,6 @@
         <activity android:name=".activity.Set02Activity" />
         <activity android:name=".activity.Set03Activity" />
         <activity android:name=".activity.Set04Activity" />
-        //图片选择Activity
         <activity android:name="com.donkingliang.imageselector.ImageSelectorActivity"
 
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"

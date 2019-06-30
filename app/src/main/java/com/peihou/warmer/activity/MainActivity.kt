@@ -489,6 +489,7 @@ class MainActivity :BaseActivity(),EasyPermissions.PermissionCallbacks,IUserView
         changeDialog?.setOnNegativeClickListener {
             changeDialog?.dismiss()
         }
+
         changeDialog?.setOnPositiveClickListener {
             changeDialog?.dismiss()
             if (code==1){

@@ -53,6 +53,7 @@ class UserModelImpl:IUserModel {
                 if (code==1 || code==2 || code==3 || code==6 ||code==7) {
                     var result = HttpUtils.requestPost(url, param)
                     if (!TextUtils.isEmpty(result)) {
+                        Log.i("OperateAsync","-->$result")
                         var jsonObject = JSONObject(result)
                         returnCode = jsonObject.getInt("returnCode")
                         if (code == 2 && returnCode == 200) {

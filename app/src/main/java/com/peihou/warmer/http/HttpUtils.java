@@ -96,7 +96,7 @@ public class HttpUtils {
             Gson gson = new Gson();
             String content = gson.toJson(params);
             RequestBody body = RequestBody.create(MediaType.parse(CONTENT_TYPE), content);
-            Call<ResponseBody> call=httpService.postQuest(url,body);
+            Call<ResponseBody> call=httpService.postRequest(url,body);
             retrofit2.Response<ResponseBody> response = call.execute();
             result = response.body().string();
         } catch (Exception e) {

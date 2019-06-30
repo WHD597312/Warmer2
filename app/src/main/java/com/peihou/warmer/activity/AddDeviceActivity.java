@@ -460,7 +460,7 @@ public class AddDeviceActivity extends BaseActivity implements EasyPermissions.P
                                 dialogLoad.dismiss();
                                 params.put("deviceMac", deviceMac);
                                 params.put("userId", userId);
-                                new AddDeviceAsync(AddDeviceActivity.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//                                new AddDeviceAsync(AddDeviceActivity.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 //                                 ToastUtils.INSTANCE.toastShort(AddDeviceActivity.this,deviceMac);
 //                                 SharedPreferences.Editor editor=wifi.edit();
 //                                 String wifiPassword = et_pswd.getText().toString();

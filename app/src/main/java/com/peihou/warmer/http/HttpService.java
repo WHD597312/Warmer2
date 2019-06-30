@@ -25,7 +25,7 @@ public interface HttpService {
 
     @POST
     @Headers({"Content-Type:application/json"})
-    Call<ResponseBody> postQuest(@Url String url, @Body RequestBody body);
+    Call<ResponseBody> postRequest(@Url String url, @Body RequestBody body);
 
     @Multipart
     @POST("device/updateSwitchPic")
