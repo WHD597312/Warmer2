@@ -22,14 +22,18 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
+import android.widget.Toast
 import butterknife.OnClick
 import com.peihou.warmer.R
 import com.peihou.warmer.base.BaseActivity
+import com.peihou.warmer.base.MyApplication
 import com.peihou.warmer.custom.dialog.ChangeDialog
 import com.peihou.warmer.custom.dialog.DownloadDialog
 import com.peihou.warmer.custom.view.MyDecoration
 import com.peihou.warmer.http.WeakRefHandler
 import com.peihou.warmer.service.MQService
+import com.peihou.warmer.utils.DownloadManagerUtil
+import com.peihou.warmer.utils.DownloadReceiver
 import com.peihou.warmer.utils.ToastUtils
 import kotlinx.android.synthetic.main.activity_person_set.*
 import kotlinx.android.synthetic.main.dialog_down.*
@@ -38,6 +42,7 @@ import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import java.io.File
+import java.io.IOException
 import java.math.BigDecimal
 import java.util.*
 
@@ -109,6 +114,11 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
 
     var bind = false
     override fun initView() {
+        downloadBroadcastReceiver = DownloadReceiver()
+        val intentFilter = IntentFilter()
+        intentFilter.addAction("android.intent.action.DOWNLOAD_COMPLETE")
+        intentFilter.addAction("android.intent.action.DOWNLOAD_NOTIFICATION_CLICKED")
+        registerReceiver(downloadBroadcastReceiver, intentFilter)
         userPreferences = getSharedPreferences("userInfo", Context.MODE_PRIVATE)
         var userName = userPreferences?.getString("userName", "")
         tv_phone.text = userName
@@ -141,12 +151,17 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
         super.onDestroy()
         if (bind)
             unbindService(connect)
+        unregisterReceiver(downloadBroadcastReceiver)
     }
 
     override fun setStatusColor(color: Int): Int {
         return Color.parseColor("#ffffff")
     }
 
+    private val title = "warmer"
+    private val desc = "正在下载取暖器"
+
+    private var downloadBroadcastReceiver: DownloadReceiver? = null
     var changeDialog: ChangeDialog? = null
     fun changeDialog(code: Int) {
         if (changeDialog != null && changeDialog?.isShowing == true) {
@@ -169,10 +184,20 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
             changeDialog?.dismiss()
         }
         changeDialog?.setOnPositiveClickListener {
-            if (code==2){
-                downLoadApp()
-            }else if (code==1){
-                ToastUtils.toastShort(this,"缓存已清除!")
+            if (code == 2) {
+                val dm = DownloadManagerUtil(this)
+                if (dm.checkDownloadManagerEnable()) {
+//                    if (MyApplication.downloadId != 0L) {
+//                        dm.clearCurrentTask(MyApplication.downloadId) // 先清空之前的下载
+//                    }
+//                    MyApplication.downloadId = dm.download(downloadUrl, title, desc)
+//                    Log.i("downloadId","-->${MyApplication.downloadId}")
+                    downLoadApp()
+                } else {
+                    Toast.makeText(this, "请开启下载管理器", Toast.LENGTH_SHORT).show()
+                }
+            } else if (code == 1) {
+                ToastUtils.toastShort(this, "缓存已清除!")
             }
             backgroundAlpha(1.0f)
             changeDialog?.dismiss()
@@ -181,7 +206,7 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
         }
         backgroundAlpha(0.6f)
         changeDialog?.setOnDismissListener {
-            if (code==1) {
+            if (code == 1) {
                 backgroundAlpha(1.0f)
             }
         }
@@ -189,7 +214,7 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
 
 
     internal var dialog: DownloadDialog? = null
-    var downloadUrl = "https://github.com/WHD597312/Warmer2/blob/master/app/release/app-release.apk"
+    var downloadUrl = "https://github.com/WHD597312/Warmer2/raw/master/app/release/app-release.apk"
     private var timer: Timer? = null
     var id: Long = 0
     private fun downDialog() {
@@ -201,9 +226,13 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
 
         dialog?.show()
         dialog?.setOnNegativeClickListener {
-            if (downing==1) {
+            if (downing == 1) {
+                val dm = DownloadManagerUtil(this)
+                if (id != 0L) {
+                    dm.clearCurrentTask(MyApplication.downloadId) // 先清空之前的下载
+                }
+                task?.cancel()
                 downing=0
-                timer?.cancel()
             }
             dialog?.dismiss()
         }
@@ -214,36 +243,40 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.System.canWrite(this)) {
-                val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,
-                        Uri.parse("package:$packageName"))
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivityForResult(intent, 1000)
-            } else {
-                //有了权限，你要做什么呢？具体的动作
-            }
-        }
-    }
-    var downing=0
+    var downing = 0
     private fun downLoadApp() {
         downDialog()
+        val uri = Uri.parse(downloadUrl)
+        val req = DownloadManager.Request(uri)
+        //设置允许使用的网络类型，这里是移动网络和wifi都可以
+        req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
+        //下载中和下载完后都显示通知栏
+        req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+
+        //设置文件的保存的位置[三种方式]
+        // 第一种 file:///storage/emulated/0/Android/data/your-package/files/Download/update.apk
+        req.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "$title.apk")
+        //第二种 file:///storage/emulated/0/Download/update.apk
+//        req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "update.apk")
+        //第三种 自定义文件路径
+//        req.setDestinationUri()
+
+        //禁止发出通知，既后台下载
+//        req.setShowRunningNotification(false);
+        //通知栏标题
+        req.setTitle(title)
+        //通知栏描述信息
+        req.setDescription(desc)
+        //设置类型为.apk
+        req.setMimeType("application/vnd.android.package-archive")
+        // 设置为可被媒体扫描器找到
+        req.allowScanningByMediaScanner()
+        // 设置为可见和可管理
+        req.setVisibleInDownloadsUi(true)
+        //获取下载任务ID
         var downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        var request = DownloadManager.Request(Uri.parse(downloadUrl))
 
-        request.setTitle("取暖器")
-        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
-        request.setAllowedOverRoaming(false)
-        request.setMimeType("application/vnd.android.package-archive")
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        //创建目录
-        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).mkdir()
-        //设置文件存放路径
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "warmer2.apk")
-        val query = DownloadManager.Query()
-
+        var query = DownloadManager.Query()
         timer = Timer()
         task = object : TimerTask() {
             override fun run() {
@@ -251,8 +284,7 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
                 if (cursor != null && cursor.moveToFirst()) {
                     if (cursor.getInt(
                                     cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
-                       dialog?.progress=100
-                        install(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/warmer2.apk")
+                        dialog?.progress = 100
                         task?.cancel()
                     }
                     val title = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_TITLE))
@@ -272,41 +304,53 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
                     val bundle = Bundle()
                     bundle.putInt("pro", pro)
                     bundle.putString("name", title)
-                    if (msg!=null){
+                    if (msg != null) {
                         msg.data = bundle
                         handler?.sendMessage(msg)
                     }
 
                 }
-                cursor.close()
+                cursor?.close()
             }
         }
         timer?.schedule(task, 0, 1000)
         dialog?.setOnPositiveClickListener {
 
-            if (downing==1) {
-                ToastUtils.toastShort(this,"当前下载任务正在进行")
+            if (downing == 1) {
+                ToastUtils.toastShort(this, "当前下载任务正在进行")
                 return@setOnPositiveClickListener
             }
-            downing=1
-            id = downloadManager.enqueue(request)
+
+            downing = 1
+
+            val dm = DownloadManagerUtil(this)
+            if (dm.checkDownloadManagerEnable()) {
+                if (id != 0L) {
+                    dm.clearCurrentTask(MyApplication.downloadId) // 先清空之前的下载
+                }
+                id = downloadManager.enqueue(req)
+                MyApplication.downloadId = id
+            } else {
+                Toast.makeText(this@PersonSetActivity, "请开启下载管理器", Toast.LENGTH_SHORT).show()
+            }
             task?.run()
         }
     }
-   var handler:Handler?=null
-       get() {
-           if (field==null){
-               field=WeakRefHandler(mCallback)
-           }
-           return field
-       }
+
+    var handler: Handler? = null
+        get() {
+            if (field == null) {
+                field = WeakRefHandler(mCallback)
+            }
+            return field
+        }
     private var TAG = "DownProgress"
     private var mCallback: Handler.Callback = Handler.Callback { msg ->
         val bundle = msg.data
         val pro = bundle.getInt("pro")
-        Log.i("downLoadApp","-->下载进度pro=$pro")
-        dialog?.progress=pro
-        if (pro == 100 && dialog != null && dialog?.isShowing==true) {
+        Log.i("downLoadApp", "-->下载进度pro=$pro")
+        dialog?.progress = pro
+        if (pro == 100 && dialog != null && dialog?.isShowing == true) {
             dialog?.dismiss()
         }
         true
@@ -325,18 +369,53 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
 //        }
 //    }
 
+    private fun installApk(context: Context, downloadApkId: Long) {
+        val dManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        val install = Intent(Intent.ACTION_VIEW)
+        val downloadFileUri = dManager.getUriForDownloadedFile(downloadApkId)
+        if (downloadFileUri != null) {
+            Log.d("DownloadManager", downloadFileUri.toString())
+            install.setDataAndType(downloadFileUri, "application/vnd.android.package-archive")
+            if ((Build.VERSION.SDK_INT >= 24)) {//判读版本是否在7.0以上
+                install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) //添加这一句表示对目标应用临时授权该Uri所代表的文件
+            }
+            install.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (install.resolveActivity(context.packageManager) != null) {
+                context.startActivity(install)
+            } else {
+                Log.e("installApk", "自动安装失败，请手动安装")
+            }
+        } else {
+            Log.e("DownloadManager", "download error")
+        }
+    }
+
     private fun install(path: String) {
+        setPermission(path)
         var intent = Intent(Intent.ACTION_VIEW)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            intent.flags=Intent.FLAG_GRANT_READ_URI_PERMISSION
+            intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
             var contentUri = FileProvider.getUriForFile(this, "com.peihou.warmer.fileprovider", File(path))
             intent.setDataAndType(contentUri, "application/vnd.android.package-archive")
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         } else {
             intent.setDataAndType(Uri.fromFile(File(path)), "application/vnd.android.package-archive")
-            intent.flags=Intent.FLAG_ACTIVITY_NEW_TASK
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         startActivity(intent)
     }
+
+    //修改文件权限
+    private fun setPermission(absolutePath: String) {
+        var command = "chmod " + "777" + " " + absolutePath;
+        var runtime = Runtime.getRuntime()
+        try {
+            runtime.exec(command);
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
     internal var task: TimerTask? = null
     /**
      * 退出

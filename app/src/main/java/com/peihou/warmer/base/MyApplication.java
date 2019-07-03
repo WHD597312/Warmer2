@@ -40,7 +40,7 @@ public class MyApplication extends Application {
     public static int floating=0;
 
     private DeviceDaoImpl deviceDao;
-
+    public static long downloadId = 0L ;// 下载任务的ID号
     public static Context getContext(){
         return mContext;
     }
