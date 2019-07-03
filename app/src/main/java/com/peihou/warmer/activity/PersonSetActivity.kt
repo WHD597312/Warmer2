@@ -187,7 +187,7 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
 
 
     internal var dialog: DownloadDialog? = null
-    var downloadUrl = "https://github.com/WHD597312/WillGood2/raw/master/app/release/app-release.apk"
+    var downloadUrl = "https://github.com/WHD597312/Warmer2/blob/master/app/release/app-release.apk"
     private var timer: Timer? = null
     var id: Long = 0
     private fun downDialog() {
