@@ -105,7 +105,6 @@ public class HttpUtils {
         return result;
     }
 
-
     /**
      * get请求
      * @param url

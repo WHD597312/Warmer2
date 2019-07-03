@@ -7,10 +7,12 @@ import android.annotation.TargetApi
 import android.app.AlertDialog
 import android.app.Dialog
 import android.app.DownloadManager
+import android.app.PendingIntent.getActivity
 import android.content.*
 import android.graphics.Color
 import android.net.Uri
 import android.os.*
+import android.provider.Settings
 import android.support.v4.content.FileProvider
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -212,6 +214,19 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.System.canWrite(this)) {
+                val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,
+                        Uri.parse("package:$packageName"))
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivityForResult(intent, 1000)
+            } else {
+                //有了权限，你要做什么呢？具体的动作
+            }
+        }
+    }
     var downing=0
     private fun downLoadApp() {
         downDialog()
@@ -226,7 +241,7 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
         //创建目录
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).mkdir()
         //设置文件存放路径
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "warmer.apk")
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "warmer2.apk")
         val query = DownloadManager.Query()
 
         timer = Timer()
@@ -237,7 +252,7 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
                     if (cursor.getInt(
                                     cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
                        dialog?.progress=100
-                        install(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/warmer.apk")
+                        install(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/warmer2.apk")
                         task?.cancel()
                     }
                     val title = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_TITLE))
@@ -272,14 +287,6 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
             if (downing==1) {
                 ToastUtils.toastShort(this,"当前下载任务正在进行")
                 return@setOnPositiveClickListener
-            }
-            var path=Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/warmer.apk"
-            var file=File(path)
-            if (file.exists()){
-                Log.i("downLoadApp","-->下载app文件存在")
-                file.delete()
-            }else{
-                Log.i("downLoadApp","-->下载app文件不存在")
             }
             downing=1
             id = downloadManager.enqueue(request)
