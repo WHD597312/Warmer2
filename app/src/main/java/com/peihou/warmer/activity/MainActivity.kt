@@ -71,11 +71,11 @@ class MainActivity :BaseActivity(),EasyPermissions.PermissionCallbacks,IUserView
     companion object {
         var running=false
     }
-    var reeultValue=0
+    private var resultValue=0
     override fun onStart() {
         super.onStart()
         permissionGrantedSuccess()
-        if (running==false && mqService!=null && reeultValue==0){
+        if (running==false && mqService!=null && resultValue==0){
             devices.clear()
             var devices2=deviceDaoImpl?.findAllDevice()!!
             devices.addAll(devices2)
@@ -93,7 +93,7 @@ class MainActivity :BaseActivity(),EasyPermissions.PermissionCallbacks,IUserView
     override fun onStop() {
         super.onStop()
         running=false
-        reeultValue=0
+        resultValue=0
     }
 
     override fun bindLayout(): Int {
@@ -332,7 +332,6 @@ class MainActivity :BaseActivity(),EasyPermissions.PermissionCallbacks,IUserView
         }
 
         override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder, position: Int) {
-           Log.i("ViewHolder","-->${position}")
             if (position==0){
                 var weatherHolder:WeatherHolder=viewHolder as WeatherHolder
                 weatherHolder.bind(temperature,humidity,weather)
@@ -351,9 +350,9 @@ class MainActivity :BaseActivity(),EasyPermissions.PermissionCallbacks,IUserView
         }
 
         override fun getItemViewType(position: Int): Int {
-            if (position==0){
+            if (position==0)
                 return 0
-            }else
+            else
                 return 1
         }
     }
@@ -455,12 +454,12 @@ class MainActivity :BaseActivity(),EasyPermissions.PermissionCallbacks,IUserView
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode==100){
-            reeultValue=1
+            resultValue=1
             params.clear()
             params["userId"]=userId
             userPresent.operate(this@MainActivity,5,params)
         }else if (resultCode==1000){
-            reeultValue=1
+            resultValue=1
             devices.clear()
             var devices2=deviceDaoImpl?.findAllDevice()!!
             devices.addAll(devices2)

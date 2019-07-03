@@ -168,7 +168,7 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
         }
         changeDialog?.setOnPositiveClickListener {
             if (code==2){
-                ToastUtils.toastShort(this,"已是最新版本")
+                downLoadApp()
             }else if (code==1){
                 ToastUtils.toastShort(this,"缓存已清除!")
             }
@@ -187,7 +187,7 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
 
 
     internal var dialog: DownloadDialog? = null
-    var downloadUrl = "https://o.app.qq.com/image/microQr.png?template=1&pkgName=com.peihou.willgood2"
+    var downloadUrl = "https://github.com/WHD597312/WillGood2/raw/master/app/release/app-release.apk"
     private var timer: Timer? = null
     var id: Long = 0
     private fun downDialog() {
