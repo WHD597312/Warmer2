@@ -23,6 +23,7 @@ class UserModelImpl:IUserModel {
     private var devices= mutableListOf<Device>()
     var onUserModelListener:IUserModel.OnUserModelListener?=null
     var code=0
+    var versionName:String=""
     /**
      * 调取后端接口
      * @code 1 注册 2登录 3修改用户密码 5获取设备列表 6更改设备名称 7删除设备
@@ -31,6 +32,16 @@ class UserModelImpl:IUserModel {
         this.code=code
         this.onUserModelListener=onUserModelListener
         myApplication=activity.application as MyApplication
+        if (code==8){
+            var packageManager=activity.application.packageManager
+            try {
+                val packageInfo = packageManager.getPackageInfo(activity.packageName, 0)
+                versionName = packageInfo.versionName
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         OperateAsync(activity).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,params)
     }
 
@@ -49,6 +60,8 @@ class UserModelImpl:IUserModel {
                     url=HttpUtils.ipAddress.plus("user/updatePassword")
                 }else if (code==6 || code==7){
                     url=HttpUtils.ipAddress.plus("device/updateDevice")
+                }else if (code==8){
+                    url=HttpUtils.ipAddress.plus("device/selectVersion")
                 }
                 if (code==1 || code==2 || code==3 || code==6 ||code==7) {
                     var result = HttpUtils.requestPost(url, param)
@@ -76,6 +89,22 @@ class UserModelImpl:IUserModel {
                         if (returnCode == 200) {
                             var returnData = jsonObject.getJSONArray("returnData")
                             getDevices(returnData)
+                        }
+                    }
+                }else if (code==8){
+                    var result:String=HttpUtils.requestGet(HttpUtils.ipAddress.plus("device/selectVersion"),2)
+                    if (!TextUtils.isEmpty(result)){
+                        var jsonObject=JSONObject(result)
+                        var returnCode=jsonObject.getInt("returnCode")
+
+                        if (returnCode==200){
+                            var returnData=jsonObject.getString("returnData")
+                            if (returnData!=versionName){
+                                returnCode=200
+                            }else{
+                                returnCode=-200
+                            }
+                            return returnCode
                         }
                     }
                 }
@@ -124,6 +153,13 @@ class UserModelImpl:IUserModel {
                     when(result){
                         200->onUserModelListener?.success(7)
                         else->onUserModelListener?.fail(-7)
+                    }
+                }
+                8->{
+                    Log.i("onUserModelListener","-->$result")
+                    when(result){
+                        200->onUserModelListener?.success(8)
+                        else->onUserModelListener?.fail(-8)
                     }
                 }
             }

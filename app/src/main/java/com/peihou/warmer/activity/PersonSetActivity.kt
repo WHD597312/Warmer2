@@ -16,6 +16,7 @@ import android.provider.Settings
 import android.support.v4.content.FileProvider
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -30,6 +31,8 @@ import com.peihou.warmer.base.MyApplication
 import com.peihou.warmer.custom.dialog.ChangeDialog
 import com.peihou.warmer.custom.dialog.DownloadDialog
 import com.peihou.warmer.custom.view.MyDecoration
+import com.peihou.warmer.http.BaseWeakAsyncTask
+import com.peihou.warmer.http.HttpUtils
 import com.peihou.warmer.http.WeakRefHandler
 import com.peihou.warmer.service.MQService
 import com.peihou.warmer.utils.DownloadManagerUtil
@@ -38,6 +41,7 @@ import com.peihou.warmer.utils.ToastUtils
 import kotlinx.android.synthetic.main.activity_person_set.*
 import kotlinx.android.synthetic.main.dialog_down.*
 import kotlinx.android.synthetic.main.item_person.view.*
+import org.json.JSONObject
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
@@ -112,6 +116,7 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
         return resources.getDimension(dimenId)
     }
 
+    var versionName:String=""
     var bind = false
     override fun initView() {
         downloadBroadcastReceiver = DownloadReceiver()
@@ -137,6 +142,13 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
         rl_view.layoutManager = LinearLayoutManager(this)
         adapter = MyAdapter(this, list)
         rl_view.adapter = adapter
+        val packageManager = application.packageManager
+        try {
+            val packageInfo = packageManager.getPackageInfo(packageName, 0)
+            versionName = packageInfo.versionName
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     @OnClick(R.id.img_back, R.id.btn_exit)
@@ -147,6 +159,35 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
         }
     }
 
+   inner class GetAppVersionAsync(activity:PersonSetActivity):BaseWeakAsyncTask<Void,Void,Int,PersonSetActivity>(activity){
+        override fun doInBackground(target: PersonSetActivity?, vararg params: Void?): Int {
+            var code=0
+            var result:String=HttpUtils.requestGet(HttpUtils.ipAddress.plus("device/selectVersion"),2)
+            if (!TextUtils.isEmpty(result)){
+                var jsonObject=JSONObject(result)
+                var returnCode=jsonObject.getInt("returnCode")
+                if (returnCode==200){
+                    var returnData=jsonObject.getString("returnData")
+                    if (returnData!=versionName){
+                        code=2000
+                    }else{
+                        code=-2000
+                    }
+                }
+            }
+            return code
+        }
+
+        override fun onPostExecute(target: PersonSetActivity?, result: Int?) {
+            if (result==2000){
+                downLoadApp()
+            }else if (result==-2000){
+                ToastUtils.toastShort(this@PersonSetActivity,"已是最新版本!")
+            }else{
+                ToastUtils.toastShort(this@PersonSetActivity,"请求失败!")
+            }
+        }
+    }
     override fun onDestroy() {
         super.onDestroy()
         if (bind)
@@ -192,7 +233,7 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
 //                    }
 //                    MyApplication.downloadId = dm.download(downloadUrl, title, desc)
 //                    Log.i("downloadId","-->${MyApplication.downloadId}")
-                    downLoadApp()
+                    GetAppVersionAsync(this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
                 } else {
                     Toast.makeText(this, "请开启下载管理器", Toast.LENGTH_SHORT).show()
                 }
@@ -356,65 +397,11 @@ class PersonSetActivity : BaseActivity(), EasyPermissions.PermissionCallbacks {
         true
     }
 
-//    var handler: Handler = object : Handler() {
-//        override fun handleMessage(msg: Message) {
-//            super.handleMessage(msg)
-//            val bundle = msg.data
-//            val pro = bundle.getInt("pro")
-//            Log.i("downLoadApp","-->下载进度pro=$pro")
-//            dialog?.progress=pro
-//            if (pro == 100 && dialog != null && dialog?.isShowing == true) {
-//                dialog?.dismiss()
-//            }
-//        }
-//    }
 
-    private fun installApk(context: Context, downloadApkId: Long) {
-        val dManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        val install = Intent(Intent.ACTION_VIEW)
-        val downloadFileUri = dManager.getUriForDownloadedFile(downloadApkId)
-        if (downloadFileUri != null) {
-            Log.d("DownloadManager", downloadFileUri.toString())
-            install.setDataAndType(downloadFileUri, "application/vnd.android.package-archive")
-            if ((Build.VERSION.SDK_INT >= 24)) {//判读版本是否在7.0以上
-                install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) //添加这一句表示对目标应用临时授权该Uri所代表的文件
-            }
-            install.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            if (install.resolveActivity(context.packageManager) != null) {
-                context.startActivity(install)
-            } else {
-                Log.e("installApk", "自动安装失败，请手动安装")
-            }
-        } else {
-            Log.e("DownloadManager", "download error")
-        }
-    }
 
-    private fun install(path: String) {
-        setPermission(path)
-        var intent = Intent(Intent.ACTION_VIEW)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-            var contentUri = FileProvider.getUriForFile(this, "com.peihou.warmer.fileprovider", File(path))
-            intent.setDataAndType(contentUri, "application/vnd.android.package-archive")
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        } else {
-            intent.setDataAndType(Uri.fromFile(File(path)), "application/vnd.android.package-archive")
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-        startActivity(intent)
-    }
 
-    //修改文件权限
-    private fun setPermission(absolutePath: String) {
-        var command = "chmod " + "777" + " " + absolutePath;
-        var runtime = Runtime.getRuntime()
-        try {
-            runtime.exec(command);
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
+
+
 
     internal var task: TimerTask? = null
     /**

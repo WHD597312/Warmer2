@@ -2,9 +2,11 @@ package com.peihou.warmer.activity
 
 import android.Manifest
 import android.annotation.TargetApi
+import android.app.DownloadManager
 import android.content.*
 import android.graphics.Color
 import android.net.ConnectivityManager
+import android.net.Uri
 import android.os.*
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -12,16 +14,15 @@ import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.RelativeLayout
-import android.widget.TextView
+import android.widget.*
 import butterknife.OnClick
 import com.amap.api.location.*
 import com.jwenfeng.library.pulltorefresh.BaseRefreshListener
 import com.peihou.warmer.R
 import com.peihou.warmer.base.BaseActivity
+import com.peihou.warmer.base.MyApplication
 import com.peihou.warmer.custom.dialog.ChangeDialog
+import com.peihou.warmer.custom.dialog.DownloadDialog
 import com.peihou.warmer.custom.view.MyDecoration
 import com.peihou.warmer.custom.view.MyHeadRefreshView
 import com.peihou.warmer.custom.view.MyLoadMoreView
@@ -39,6 +40,7 @@ import com.peihou.warmer.mvp.view.IUserView
 import com.peihou.warmer.pojo.Device
 import com.peihou.warmer.receiver.MQTTMessageReveiver
 import com.peihou.warmer.service.MQService
+import com.peihou.warmer.utils.DownloadManagerUtil
 import com.peihou.warmer.utils.TenTwoUtil
 import com.peihou.warmer.utils.ToastUtils
 import com.peihou.warmer.utils.Utils
@@ -49,7 +51,8 @@ import org.json.JSONObject
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
-import java.util.ArrayList
+import java.math.BigDecimal
+import java.util.*
 
 class MainActivity :BaseActivity(),EasyPermissions.PermissionCallbacks,IUserView{
 
@@ -134,13 +137,10 @@ class MainActivity :BaseActivity(),EasyPermissions.PermissionCallbacks,IUserView
         var filter=IntentFilter("MainActivity")
         filter.addAction("offline")
         registerReceiver(receiver,filter)
+        userPresent.operate(this,8,params)
         swipeRefresh.setHeaderView(MyHeadRefreshView(this))
         swipeRefresh.setFooterView(MyLoadMoreView(this))
-        if (reset==0){
-            params.clear()
-            params["userId"]=userId
-            userPresent.operate(this,5,params)
-        }
+
         swipeRefresh.setRefreshListener(object : BaseRefreshListener {
             override fun loadMore() {
                 refresh=2
@@ -190,6 +190,12 @@ class MainActivity :BaseActivity(),EasyPermissions.PermissionCallbacks,IUserView
             ToastUtils.toastShort(this,"更新设备名称失败")
         }else if (code==-7){
             ToastUtils.toastShort(this,"删除设备失败")
+        }else if (code==-8){
+            if (reset==0){
+                params.clear()
+                params["userId"]=userId
+                userPresent.operate(this,5,params)
+            }
         }
 
     }
@@ -228,6 +234,135 @@ class MainActivity :BaseActivity(),EasyPermissions.PermissionCallbacks,IUserView
             ToastUtils.toastShort(this,"删除设备成功")
             devices.removeAt(updatePosition)
             adapter?.notifyDataSetChanged()
+        }else if (code==8){
+            downLoadApp()
+        }
+    }
+
+    internal var dialog: DownloadDialog? = null
+    var downloadUrl = "https://github.com/WHD597312/Warmer2/raw/master/app/release/app-release.apk"
+    private var timer: Timer? = null
+    var id: Long = 0
+    internal var task: TimerTask? = null
+    private fun downDialog() {
+        if (dialog != null && dialog?.isShowing == true) {
+            return
+        }
+        dialog = DownloadDialog(this)
+        dialog?.setCanceledOnTouchOutside(false)
+
+        dialog?.show()
+        dialog?.setOnNegativeClickListener {
+            if (downing == 1) {
+                val dm = DownloadManagerUtil(this)
+                if (id != 0L) {
+                    dm.clearCurrentTask(MyApplication.downloadId) // 先清空之前的下载
+                }
+                task?.cancel()
+                downing=0
+            }
+            dialog?.dismiss()
+        }
+
+        backgroundAlpha(0.6f)
+        dialog?.setOnDismissListener {
+            backgroundAlpha(1.0f)
+        }
+    }
+
+    var downing = 0
+    private val title = "warmer"
+    private val desc = "正在下载取暖器"
+    private fun downLoadApp() {
+        downDialog()
+        val uri = Uri.parse(downloadUrl)
+        val req = DownloadManager.Request(uri)
+        //设置允许使用的网络类型，这里是移动网络和wifi都可以
+        req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
+        //下载中和下载完后都显示通知栏
+        req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+
+        //设置文件的保存的位置[三种方式]
+        // 第一种 file:///storage/emulated/0/Android/data/your-package/files/Download/update.apk
+        req.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "$title.apk")
+        //第二种 file:///storage/emulated/0/Download/update.apk
+//        req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "update.apk")
+        //第三种 自定义文件路径
+//        req.setDestinationUri()
+
+        //禁止发出通知，既后台下载
+//        req.setShowRunningNotification(false);
+        //通知栏标题
+        req.setTitle(title)
+        //通知栏描述信息
+        req.setDescription(desc)
+        //设置类型为.apk
+        req.setMimeType("application/vnd.android.package-archive")
+        // 设置为可被媒体扫描器找到
+        req.allowScanningByMediaScanner()
+        // 设置为可见和可管理
+        req.setVisibleInDownloadsUi(true)
+        //获取下载任务ID
+        var downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+
+        var query = DownloadManager.Query()
+        timer = Timer()
+        task = object : TimerTask() {
+            override fun run() {
+                val cursor = downloadManager.query(query.setFilterById(id))
+                if (cursor != null && cursor.moveToFirst()) {
+                    if (cursor.getInt(
+                                    cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
+                        dialog?.progress = 100
+                        task?.cancel()
+                    }
+                    val title = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_TITLE))
+//                    val address = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI))
+                    val bytes_downloaded = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                    val bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                    Log.i("bytes_downloaded", "-->$bytes_downloaded")
+                    Log.i("bytes_total", "-->$bytes_total")
+                    val x = bytes_downloaded.toFloat()
+                    val ss = x / bytes_total * 100
+                    val bigDecimal = BigDecimal(ss.toDouble())
+                    val bigDecimal2 = bigDecimal.setScale(0, BigDecimal.ROUND_DOWN)
+                    val pro = Integer.parseInt("".plus(bigDecimal2))
+                    Log.i("prossssssssssssss", "-->" + bytes_downloaded / bytes_total)
+
+                    val msg = handler?.obtainMessage()
+                    val bundle = Bundle()
+                    bundle.putInt("pro", pro)
+                    bundle.putString("name", title)
+                    if (msg != null) {
+                        msg.data = bundle
+                        handler?.sendMessage(msg)
+                    }
+
+                }
+                cursor?.close()
+            }
+        }
+        timer?.schedule(task, 0, 1000)
+        dialog?.setOnPositiveClickListener {
+
+            if (downing == 1) {
+                ToastUtils.toastShort(this, "当前下载任务正在进行")
+                return@setOnPositiveClickListener
+            }
+
+            downing = 1
+
+            val dm = DownloadManagerUtil(this)
+            if (dm.checkDownloadManagerEnable()) {
+                if (id != 0L) {
+                    dm.clearCurrentTask(MyApplication.downloadId) // 先清空之前的下载
+                }
+                id = downloadManager.enqueue(req)
+                MyApplication.downloadId = id
+            } else {
+                Toast.makeText(this@MainActivity, "请开启下载管理器", Toast.LENGTH_SHORT).show()
+            }
+            task?.run()
         }
     }
 
